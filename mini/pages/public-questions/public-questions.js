@@ -1,99 +1,74 @@
-// pages/public-questions/public-questions.js
+// pages/public-questions/public-questions.js - 公共题库首页（技术栈图标网格）
 const api = require('../../utils/api')
 
 Page({
   data: {
-    questions: [],
-    loading: false,
-    page: 1,
-    total: 0,
-    keyword: '',
-    showUpload: false,
-    uploadForm: {
-      title: '',
-      content: '',
-      answer: '',
-      tech_stack: '其他',
-      difficulty: 1
-    }
+    techStacks: [],
+    // 技术栈分组
+    techGroups: [
+      {
+        name: '编程语言',
+        icon: '💻',
+        items: ['Python', 'Java', 'Go', 'C/C++', 'Rust', 'JavaScript', 'TypeScript']
+      },
+      {
+        name: '前端',
+        icon: '🎨',
+        items: ['React', 'Vue', 'Angular', 'HTML/CSS', '小程序', 'Node.js']
+      },
+      {
+        name: '后端框架',
+        icon: '⚙️',
+        items: ['Django', 'Flask', 'FastAPI', 'Spring Boot', 'Express', 'Gin']
+      },
+      {
+        name: 'AI & 数据',
+        icon: '🤖',
+        items: ['AI 大模型', '机器学习', '深度学习', 'NLP', '计算机视觉', '数据分析']
+      },
+      {
+        name: '数据库',
+        icon: '🗄️',
+        items: ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Elasticsearch']
+      },
+      {
+        name: '基础设施',
+        icon: '️',
+        items: ['Docker', 'Kubernetes', 'Linux', 'Nginx', 'DevOps', 'CI/CD']
+      },
+      {
+        name: '网络 & 安全',
+        icon: '🔒',
+        items: ['TCP/IP', 'HTTP', '网络安全', '密码学']
+      },
+      {
+        name: '其他',
+        icon: '',
+        items: ['算法', '数据结构', '操作系统', '分布式系统', '微服务', '测试', '其他']
+      }
+    ]
   },
 
   onLoad() {
-    this.loadQuestions()
+    this.loadTechStacks()
   },
 
-  onShow() {
-    this.loadQuestions()
+  loadTechStacks() {
+    api.get('/questions/tech-stacks').then(res => {
+      if (res.stacks && res.stacks.length > 0) {
+        // 用后端返回的列表更新分组
+        const allStacks = res.stacks
+        const groups = this.data.techGroups.map(g => ({
+          ...g,
+          items: g.items.filter(item => allStacks.includes(item))
+        })).filter(g => g.items.length > 0)
+        this.setData({ techStacks: allStacks, techGroups: groups })
+      }
+    }).catch(() => {})
   },
 
-  loadQuestions() {
-    this.setData({ loading: true })
-    api.get('/public-questions/', {
-      page: this.data.page,
-      size: 20,
-      keyword: this.data.keyword
-    }).then(res => {
-      this.setData({
-        questions: this.data.page === 1 ? res.items : [...this.data.questions, ...res.items],
-        total: res.total,
-        loading: false
-      })
-    }).catch(() => this.setData({ loading: false }))
-  },
-
-  onSearchInput(e) {
-    this.setData({ keyword: e.detail.value })
-  },
-
-  doSearch() {
-    this.setData({ page: 1, questions: [] })
-    this.loadQuestions()
-  },
-
-  toggleUpload() {
-    this.setData({ showUpload: !this.data.showUpload })
-  },
-
-  onFormInput(e) {
-    const field = e.currentTarget.dataset.field
-    const form = { ...this.data.uploadForm, [field]: e.detail.value }
-    this.setData({ uploadForm: form })
-  },
-
-  uploadQuestion() {
-    const { title, content, answer, tech_stack, difficulty } = this.data.uploadForm
-    if (!title.trim() || !content.trim()) {
-      wx.showToast({ title: '请填写标题和内容', icon: 'none' })
-      return
-    }
-
-    api.post('/public-questions/', {
-      title: title.trim(),
-      content: content.trim(),
-      answer: answer.trim(),
-      tech_stack,
-      difficulty: Number(difficulty)
-    }).then(() => {
-      wx.showToast({ title: '上传成功', icon: 'success' })
-      this.setData({
-        showUpload: false,
-        uploadForm: { title: '', content: '', answer: '', tech_stack: '其他', difficulty: 1 },
-        page: 1,
-        questions: []
-      })
-      this.loadQuestions()
-    })
-  },
-
-  goDetail(e) {
-    const id = e.currentTarget.dataset.id
-    wx.navigateTo({ url: `/pages/public-question-detail/public-question-detail?id=${id}` })
-  },
-
-  onReachBottom() {
-    if (this.data.questions.length < this.data.total) {
-      this.setData({ page: this.data.page + 1 })
-      this.loadQuestions()
-    }
+  goTechList(e) {
+    const tech = e.currentTarget.dataset.tech
+    wx.navigateTo({ url: `/pages/public-tech-list/public-tech-list?tech=${encodeURIComponent(tech)}` })
   }
 })

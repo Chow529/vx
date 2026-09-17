@@ -8,6 +8,7 @@
     "pages/post-detail/post-detail",
     "pages/question-detail/question-detail",
     "pages/public-questions/public-questions",
+    "pages/public-tech-list/public-tech-list",
     "pages/quiz/quiz"
   ],
   "window": {

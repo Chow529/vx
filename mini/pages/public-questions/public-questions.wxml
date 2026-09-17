@@ -1,60 +1,22 @@
-<!--pages/public-questions/public-questions.wxml-->
+<!--pages/public-questions/public-questions.wxml - 技术栈图标网格首页-->
 <view class="container">
-  <!-- 搜索栏 -->
-  <view class="search-bar">
-    <input class="search-input" placeholder="搜索题目..." value="{{keyword}}" bindinput="onSearchInput" bindconfirm="doSearch" />
-    <text class="search-btn" bindtap="doSearch">搜索</text>
+  <view class="page-header">
+    <text class="page-title">公共题库</text>
+    <text class="page-desc">选择一个技术栈浏览题目</text>
   </view>
 
-  <!-- 上传按钮 -->
-  <view class="upload-btn" bindtap="toggleUpload">
-    <text>{{showUpload ? '收起' : '+ 上传题目'}}</text>
-  </view>
-
-  <!-- 上传表单 -->
-  <view class="card upload-form" wx:if="{{showUpload}}">
-    <view class="form-group">
-      <text class="label">标题</text>
-      <input class="input" placeholder="输入题目标题" value="{{uploadForm.title}}" data-field="title" bindinput="onFormInput" />
+  <view wx:for="{{techGroups}}" wx:key="name" class="group-section">
+    <view class="group-header">
+      <text class="group-icon">{{item.icon}}</text>
+      <text class="group-name">{{item.name}}</text>
     </view>
-    <view class="form-group">
-      <text class="label">题目内容</text>
-      <textarea class="input textarea" placeholder="输入题目内容" value="{{uploadForm.content}}" data-field="content" bindinput="onFormInput" auto-height />
-    </view>
-    <view class="form-group">
-      <text class="label">答案（可选）</text>
-      <textarea class="input textarea" placeholder="输入答案" value="{{uploadForm.answer}}" data-field="answer" bindinput="onFormInput" auto-height />
-    </view>
-    <view class="form-group flex-row">
-      <view class="form-half">
-        <text class="label">技术栈</text>
-        <input class="input" placeholder="如：Python" value="{{uploadForm.tech_stack}}" data-field="tech_stack" bindinput="onFormInput" />
-      </view>
-      <view class="form-half">
-        <text class="label">难度</text>
-        <picker mode="selector" range="{{['简单','中等','困难']}}" value="{{uploadForm.difficulty - 1}}" bindchange="onDifficultyChange">
-          <view class="input picker">{{['简单','中等','困难'][uploadForm.difficulty - 1]}}</view>
-        </picker>
-      </view>
-    </view>
-    <button class="btn-primary" bindtap="uploadQuestion">上传到公共题库</button>
-  </view>
-
-  <!-- 题目列表 -->
-  <view class="question-list">
-    <view wx:for="{{questions}}" wx:key="id" class="card question-card" bindtap="goDetail" data-id="{{item.id}}">
-      <view class="q-header">
-        <text class="q-title">{{item.title}}</text>
-        <text class="tag">{{item.tech_stack}}</text>
-      </view>
-      <text class="q-content">{{item.content}}</text>
-      <view class="q-footer">
-        <text class="q-meta">👁 {{item.view_count}}  💬 {{item.comment_count}}</text>
-        <text class="q-time">{{item.user_nickname}} · {{item.timeAgo}}</text>
+    <view class="tech-grid">
+      <view wx:for="{{item.items}}" wx:for-item="tech" wx:key="*this"
+            class="tech-card"
+            bindtap="goTechList"
+            data-tech="{{tech}}">
+        <text class="tech-name">{{tech}}</text>
       </view>
     </view>
   </view>
-
-  <view wx:if="{{loading}}" class="loading">加载中...</view>
-  <view wx:if="{{!loading && questions.length === 0}}" class="empty">暂无题目，快来上传第一题吧~</view>
 </view>
