@@ -1,0 +1,70 @@
+<!--pages/post-detail/post-detail.wxml - 帖子详情 + 评论-->
+<view class="container">
+  <block wx:if="{{post}}">
+    <!-- 帖子内容 -->
+    <view class="card post-card">
+      <view class="flex-between">
+        <text class="post-title">{{post.title}}</text>
+        <view wx:if="{{post.is_solved}}" class="solved-badge">已解决</view>
+      </view>
+
+      <view class="post-meta">
+        <image class="avatar" src="{{post.user_avatar || '/images/default-avatar.png'}}" />
+        <text class="nickname">{{post.user_nickname}}</text>
+        <text class="time">{{post.timeAgo}}</text>
+      </view>
+
+      <text class="post-content">{{post.content}}</text>
+
+      <view class="tag-row">
+        <text class="tag">{{post.tech_stack}}</text>
+        <text class="tag {{post.difficultyClass}}">{{post.difficultyLabel}}</text>
+        <text wx:for="{{post.tags}}" wx:key="*this" class="tag">{{item}}</text>
+      </view>
+
+      <view class="post-actions flex-row">
+        <text class="action-btn" bindtap="likePost">👍 {{post.like_count}}</text>
+        <text class="action-btn">💬 {{post.comment_count}}</text>
+        <text class="action-btn primary" bindtap="collectToMy">⭐ 存入题库</text>
+      </view>
+    </view>
+
+    <!-- 评论区 -->
+    <view class="card comments-section">
+      <text class="section-title">评论 ({{comments.length}})</text>
+
+      <view wx:if="{{comments.length === 0}}" class="empty">暂无评论，快来抢沙发~</view>
+
+      <view wx:for="{{comments}}" wx:key="id" class="comment-item">
+        <view class="comment-header">
+          <image class="avatar-small" src="{{item.user_avatar || '/images/default-avatar.png'}}" />
+          <text class="comment-author">{{item.user_nickname}}</text>
+          <text class="comment-time">{{item.timeAgo}}</text>
+          <text wx:if="{{item.is_adopted}}" class="adopted-badge">最佳答案</text>
+        </view>
+        <text class="comment-content">{{item.content}}</text>
+        <view class="comment-actions">
+          <text class="comment-like" bindtap="likeComment" data-id="{{item.id}}">
+            👍 {{item.like_count}}
+          </text>
+        </view>
+
+        <!-- 子回复 -->
+        <view wx:if="{{item.replies && item.replies.length > 0}}" class="replies">
+          <view wx:for="{{item.replies}}" wx:for-item="reply" wx:key="id" class="reply-item">
+            <text class="reply-author">{{reply.user_nickname}}:</text>
+            <text class="reply-content">{{reply.content}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <!-- 评论输入框 -->
+  <view class="comment-input-bar" wx:if="{{post}}">
+    <input class="comment-input" placeholder="写下你的评论..." value="{{commentText}}" bindinput="onCommentInput" />
+    <text class="comment-submit" bindtap="submitComment">发送</text>
+  </view>
+</view>

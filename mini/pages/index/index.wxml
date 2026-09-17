@@ -1,0 +1,58 @@
+<!--pages/index/index.wxml - 社区圈首页-->
+<view class="container">
+  <!-- 排序标签 -->
+  <view class="sort-bar flex-row">
+    <view
+      wx:for="{{sortOptions}}"
+      wx:key="value"
+      class="sort-item {{currentSort === index ? 'active' : ''}}"
+      data-index="{{index}}"
+      bindtap="switchSort"
+    >{{item.label}}</view>
+  </view>
+
+  <!-- 帖子列表 -->
+  <view class="post-list">
+    <view
+      wx:for="{{posts}}"
+      wx:key="id"
+      class="card post-card"
+      bindtap="goPostDetail"
+      data-id="{{item.id}}"
+    >
+      <!-- 标题行 -->
+      <view class="flex-between">
+        <text class="post-title">{{item.title}}</text>
+        <view wx:if="{{item.is_solved}}" class="solved-badge">已解决</view>
+      </view>
+
+      <!-- 内容摘要 -->
+      <text class="post-content">{{item.content}}</text>
+
+      <!-- 标签 -->
+      <view class="tag-row">
+        <text class="tag">{{item.tech_stack}}</text>
+        <text class="tag {{item.difficultyClass}}">{{item.difficultyLabel}}</text>
+        <text wx:for="{{item.tags}}" wx:key="*this" class="tag">{{item}}</text>
+      </view>
+
+      <!-- 底部信息 -->
+      <view class="flex-between post-footer">
+        <view class="flex-row">
+          <image class="avatar" src="{{item.user_avatar || '/images/default-avatar.png'}}" />
+          <text class="nickname">{{item.user_nickname}}</text>
+          <text class="time">{{item.timeAgo}}</text>
+        </view>
+        <view class="flex-row actions">
+          <text class="action-item" catchtap="likePost" data-id="{{item.id}}">👍 {{item.like_count}}</text>
+          <text class="action-item">💬 {{item.comment_count}}</text>
+          <text class="action-item collect-btn" catchtap="collectToMy" data-id="{{item.id}}">⭐ 收藏</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+  <view wx:if="{{!loading && posts.length === 0}}" class="empty">还没有帖子, 快来发布第一个吧~</view>
+</view>

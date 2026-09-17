@@ -1,0 +1,41 @@
+/* pages/post/post.wxss */
+.container { padding: 20rpx 0; }
+
+.label {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.textarea {
+  min-height: 200rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.picker-value {
+  border: 1rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  margin-bottom: 20rpx;
+  color: #333;
+}
+
+.save-option {
+  margin-top: 16rpx;
+}
+.save-label {
+  font-size: 26rpx;
+  color: #666;
+  margin-left: 12rpx;
+}
+
+.submit-btn {
+  margin: 40rpx 24rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 32rpx;
+  border-radius: 16rpx;
+}

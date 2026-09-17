@@ -1,0 +1,96 @@
+<!--pages/my-questions/my-questions.wxml - 个人题库-->
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-bar flex-row">
+    <input class="search-input" placeholder="搜索题目 (支持语义搜索)" value="{{keyword}}" bindinput="onSearchInput" bindconfirm="doSearch" />
+    <view class="search-btn" bindtap="doSearch">搜索</view>
+  </view>
+
+  <!-- 工具栏 -->
+  <view class="toolbar flex-between">
+    <view class="flex-row">
+      <view class="tool-btn" bindtap="toggleFilter">筛选</view>
+      <view class="tool-btn" bindtap="toggleArchived">
+        {{showArchived ? '查看题库' : '查看归档'}} ({{showArchived ? '归档' : '题库'}})
+      </view>
+      <view class="tool-btn import-btn" bindtap="goFileImport">📁 文件导入</view>
+    </view>
+    <view class="tool-btn" bindtap="toggleView">
+      {{viewMode === 'list' ? '卡片' : '列表'}}
+    </view>
+  </view>
+
+  <!-- 筛选面板 -->
+  <view wx:if="{{showFilter}}" class="filter-panel card">
+    <view class="filter-group">
+      <text class="filter-label">技术栈</text>
+      <view class="flex-row" style="flex-wrap: wrap;">
+        <text
+          wx:for="{{techOptions}}" wx:key="*this"
+          class="tag {{filterTech === item ? 'selected' : ''}}"
+          data-value="{{item}}" bindtap="filterByTech"
+        >{{item}}</text>
+      </view>
+    </view>
+    <view class="filter-group">
+      <text class="filter-label">难度</text>
+      <view class="flex-row">
+        <text
+          wx:for="{{difficultyOptions}}" wx:key="value"
+          class="tag {{filterDifficulty === item.value ? 'selected' : ''}}"
+          data-value="{{item.value}}" bindtap="filterByDifficulty"
+        >{{item.label}}</text>
+      </view>
+    </view>
+    <view class="filter-group">
+      <text class="filter-label">掌握程度</text>
+      <view class="flex-row">
+        <text
+          wx:for="{{masteryOptions}}" wx:key="value"
+          class="tag {{filterMastery === item.value ? 'selected' : ''}}"
+          data-value="{{item.value}}" bindtap="filterByMastery"
+        >{{item.label}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 题目列表 -->
+  <view class="question-list">
+    <view
+      wx:for="{{questions}}"
+      wx:key="id"
+      class="card question-card"
+      bindtap="goQuestionDetail"
+      data-id="{{item.id}}"
+    >
+      <view class="flex-between">
+        <text class="q-title">{{item.title}}</text>
+        <text class="tag {{item.masteryClass}}" catchtap="cycleMastery" data-id="{{item.id}}" data-mastery="{{item.mastery}}">
+          {{item.masteryLabel}}
+        </text>
+      </view>
+
+      <text class="q-content" wx:if="{{viewMode === 'list'}}">{{item.content}}</text>
+
+      <view class="tag-row">
+        <text class="tag">{{item.tech_stack}}</text>
+        <text class="tag {{item.difficultyClass}}">{{item.difficultyLabel}}</text>
+        <text wx:for="{{item.tags}}" wx:key="*this" class="tag">{{item}}</text>
+      </view>
+
+      <view class="flex-between q-footer">
+        <text class="q-source">来源: {{item.source === 'manual' ? '手动录入' : item.source === 'file_import' ? '文件导入' : '社区收藏'}}</text>
+        <view class="flex-row">
+          <text class="action-item publish" catchtap="publishToCommunity" data-id="{{item.id}}">发布到社区</text>
+          <text class="action-item" catchtap="deleteQuestion" data-id="{{item.id}}">删除</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 状态 -->
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+  <view wx:if="{{!loading && questions.length === 0}}" class="empty">
+    {{showArchived ? '暂无已归档的题目' : '题库为空, 快去添加题目吧~'}}
+  </view>
+</view>

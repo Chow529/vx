@@ -1,0 +1,83 @@
+<!--pages/file-import/file-import.wxml - 文件导入题库-->
+<view class="container">
+  <!-- 文件选择区域 -->
+  <view class="card upload-section">
+    <view class="section-title">第一步: 选择文件</view>
+    <view class="file-info" wx:if="{{fileName}}">
+      <text class="file-name">{{fileName}}</text>
+      <text class="file-tip">支持 PDF / Word / Markdown</text>
+    </view>
+    <view wx:else class="empty-file">
+      <text class="empty-text">点击选择文件</text>
+    </view>
+    <button class="btn-primary choose-btn" bindtap="chooseFile" disabled="{{parsing}}">
+      {{fileName ? '重新选择' : '选择文件'}}
+    </button>
+  </view>
+
+  <!-- 解析按钮 -->
+  <view class="card" wx:if="{{fileName && !parsed}}">
+    <button class="btn-primary parse-btn" bindtap="parseFile" disabled="{{parsing}}">
+      {{parsing ? '解析中...' : '开始解析'}}
+    </button>
+  </view>
+
+  <!-- 解析结果预览 -->
+  <view class="card preview-section" wx:if="{{parsed}}">
+    <view class="section-title flex-between">
+      <text>第二步: 预览并选择 ({{selectedIds.length}}/{{items.length}})</text>
+      <text class="select-all" bindtap="toggleSelectAll">
+        {{selectAll ? '取消全选' : '全选'}}
+      </text>
+    </view>
+
+    <scroll-view scroll-y class="item-list">
+      <view
+        wx:for="{{items}}"
+        wx:key="id"
+        class="item-card {{item.selected ? 'selected' : ''}}"
+        bindtap="toggleItem"
+        data-index="{{index}}"
+      >
+        <view class="item-header">
+          <text class="item-num">#{{index + 1}}</text>
+          <view class="item-tags">
+            <text class="tag">{{item.tech_stack}}</text>
+            <text class="tag {{item.difficultyClass}}">{{item.difficultyLabel}}</text>
+          </view>
+          <view class="check-box {{item.selected ? 'checked' : ''}}">
+            {{item.selected ? '✓' : ''}}
+          </view>
+        </view>
+        <text class="item-question">{{item.preview}}</text>
+        <text wx:if="{{item.answer}}" class="item-answer">答案: {{item.answer}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 导入配置 -->
+  <view class="card config-section" wx:if="{{parsed}}">
+    <view class="section-title">第三步: 配置属性</view>
+    
+    <view class="config-item">
+      <text class="config-label">技术栈</text>
+      <picker mode="selector" range="{{techOptions}}" bindchange="pickTech">
+        <view class="picker-value">{{techStack}} ▾</view>
+      </picker>
+    </view>
+
+    <view class="config-item">
+      <text class="config-label">难度</text>
+      <picker mode="selector" range="{{difficultyOptions}}" bindchange="pickDifficulty">
+        <view class="picker-value">{{difficultyOptions[difficulty - 1]}} ▾</view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 导入按钮 -->
+  <view class="import-btn-wrap" wx:if="{{parsed}}">
+    <button class="btn-primary import-btn" bindtap="importQuestions" disabled="{{submitting || selectedIds.length === 0}}">
+      {{submitting ? '导入中...' : '导入 ' + selectedIds.length + ' 道题目到题库'}}
+    </button>
+  </view>
+</view>

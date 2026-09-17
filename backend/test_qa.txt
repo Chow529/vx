@@ -1,0 +1,8 @@
+Q: What is the difference between a list and a tuple in Python?
+A: Lists are mutable, tuples are immutable. Lists use [], tuples use ().
+
+Q: How does React's useState hook work?
+A: useState returns a state variable and a function to update it. It triggers re-render when updated.
+
+Q: What is a database index and when should you use it?
+A: An index is a data structure that improves query speed. Use it on frequently queried columns but not on tables with frequent writes.

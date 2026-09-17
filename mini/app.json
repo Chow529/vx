@@ -1,0 +1,53 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/my-questions/my-questions",
+    "pages/post/post",
+    "pages/profile/profile",
+    "pages/file-import/file-import",
+    "pages/post-detail/post-detail",
+    "pages/question-detail/question-detail",
+    "pages/public-questions/public-questions",
+    "pages/quiz/quiz"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#4A90D9",
+    "navigationBarTitleText": "知问库",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#4A90D9",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "社区",
+        "iconPath": "images/community.png",
+        "selectedIconPath": "images/community-active.png"
+      },
+      {
+        "pagePath": "pages/my-questions/my-questions",
+        "text": "题库",
+        "iconPath": "images/question.png",
+        "selectedIconPath": "images/question-active.png"
+      },
+      {
+        "pagePath": "pages/post/post",
+        "text": "发布",
+        "iconPath": "images/post.png",
+        "selectedIconPath": "images/post-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/profile.png",
+        "selectedIconPath": "images/profile-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,78 @@
+<!--pages/profile/profile.wxml - 我的页面-->
+<view class="container">
+  <!-- 用户信息 -->
+  <view class="user-header card">
+    <image class="user-avatar" src="{{userInfo.avatar_url || '/images/default-avatar.png'}}" />
+    <view class="user-info">
+      <text class="user-name">{{userInfo.nickname || '知问用户'}}</text>
+      <text class="user-reputation">声望: {{userInfo.reputation || 0}}</text>
+    </view>
+  </view>
+
+  <!-- 题库统计 -->
+  <view class="card" wx:if="{{stats}}">
+    <text class="section-title">题库概览</text>
+    <view class="stat-row flex-between">
+      <view class="stat-item">
+        <text class="stat-num">{{stats.total}}</text>
+        <text class="stat-label">总题数</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{stats.archived}}</text>
+        <text class="stat-label">已掌握</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{stats.total + stats.archived}}</text>
+        <text class="stat-label">累计录入</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 掌握进度 -->
+  <view class="card" wx:if="{{stats && stats.masteryList.length}}">
+    <text class="section-title">掌握进度</text>
+    <view wx:for="{{stats.masteryList}}" wx:key="name" class="progress-item">
+      <view class="flex-between">
+        <text>{{item.name}}</text>
+        <text>{{item.count}} 题</text>
+      </view>
+      <view class="progress-bar">
+        <view class="progress-fill" style="width: {{stats.total > 0 ? (item.count / stats.total * 100) : 0}}%"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 技术栈分布 -->
+  <view class="card" wx:if="{{stats && stats.techList.length}}">
+    <text class="section-title">技术栈分布</text>
+    <view class="tech-grid">
+      <view wx:for="{{stats.techList}}" wx:key="name" class="tech-item">
+        <text class="tech-name">{{item.name}}</text>
+        <text class="tech-count">{{item.count}} 题</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="card">
+    <view class="menu-item" bindtap="goToMyQuestions">
+      <text>我的题库</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="divider"></view>
+    <view class="menu-item" bindtap="goToPublicQuestions">
+      <text>公共题库</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="divider"></view>
+    <view class="menu-item" bindtap="goToQuiz">
+      <text>大模型出题</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="divider"></view>
+    <view class="menu-item" bindtap="goToArchived">
+      <text>已掌握归档</text>
+      <text class="arrow">›</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,94 @@
+<!--pages/quiz/quiz.wxml-->
+<view class="container">
+  <!-- 配置阶段 -->
+  <view wx:if="{{step === 'config'}}" class="config-section">
+    <view class="card">
+      <text class="section-title">出题配置</text>
+      
+      <view class="form-group">
+        <text class="label">题目数量</text>
+        <picker mode="selector" range="{{[1,3,5,10,15,20]}}" value="{{count - 1}}" bindchange="onCountChange">
+          <view class="picker-value">{{count}} 题 ▾</view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="label">题目来源</text>
+        <picker mode="selector" range="{{['全部题库','我的题库']}}" bindchange="onSourceChange">
+          <view class="picker-value">{{source === 'all' ? '全部题库' : '我的题库'}} ▾</view>
+        </picker>
+      </view>
+
+      <view class="form-group" wx:if="{{techStacks}}">
+        <text class="label">技术栈（可选）</text>
+        <picker mode="selector" range="{{techStacks}}" bindchange="onTechChange">
+          <view class="picker-value">{{tech_stack || '全部'}} ▾</view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="label">难度（可选）</text>
+        <picker mode="selector" range="{{['全部','简单','中等','困难']}}" bindchange="onDifficultyChange">
+          <view class="picker-value">{{difficulty ? ['','简单','中等','困难'][difficulty] : '全部'}} ▾</view>
+        </picker>
+      </view>
+
+      <button class="btn-primary start-btn" bindtap="startQuiz">开始答题</button>
+    </view>
+  </view>
+
+  <!-- 答题阶段 -->
+  <view wx:if="{{step === 'quiz'}}" class="quiz-section">
+    <view class="progress-bar">
+      <view class="progress-fill" style="width: {{(currentIdx + 1) / questions.length * 100}}%"></view>
+    </view>
+    <text class="progress-text">{{currentIdx + 1}} / {{questions.length}}</text>
+
+    <view class="card question-card" wx:if="{{questions[currentIdx]}}">
+      <view class="q-header">
+        <text class="tag">{{questions[currentIdx].tech_stack}}</text>
+        <text class="tag {{['','green','orange','red'][questions[currentIdx].difficulty]}}">{{['','简单','中等','困难'][questions[currentIdx].difficulty]}}</text>
+      </view>
+      <text class="q-title">{{questions[currentIdx].question}}</text>
+
+      <view class="options">
+        <view wx:for="{{questions[currentIdx].options}}" wx:key="*this" 
+              class="option {{userAnswers[currentIdx] === item ? 'selected' : ''}}"
+              bindtap="selectAnswer" data-answer="{{item}}">
+          <text class="option-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="nav-buttons">
+      <button class="btn-secondary" bindtap="prevQuestion" disabled="{{currentIdx === 0}}">上一题</button>
+      <button class="btn-primary" bindtap="nextQuestion">
+        {{currentIdx === questions.length - 1 ? '提交' : '下一题'}}
+      </button>
+    </view>
+  </view>
+
+  <!-- 结果阶段 -->
+  <view wx:if="{{step === 'result'}}" class="result-section">
+    <view class="card result-card">
+      <text class="score-label">你的得分</text>
+      <text class="score-value">{{score}} / {{total}}</text>
+      <text class="score-percent">{{percent}}%</text>
+    </view>
+
+    <view class="card" wx:for="{{questions}}" wx:key="id">
+      <view class="review-header">
+        <text class="review-num">#{{index + 1}}</text>
+        <text class="{{userAnswers[index] === item.correct_answer ? 'correct' : 'wrong'}}">
+          {{userAnswers[index] === item.correct_answer ? '✓ 正确' : '✗ 错误'}}
+        </text>
+      </view>
+      <text class="review-q">{{item.question}}</text>
+      <text class="review-answer">你的答案：{{userAnswers[index] || '未作答'}}</text>
+      <text class="review-correct">正确答案：{{item.correct_answer}}</text>
+      <text wx:if="{{item.explanation}}" class="review-explain">解析：{{item.explanation}}</text>
+    </view>
+
+    <button class="btn-primary" bindtap="restart">重新出题</button>
+  </view>
+</view>

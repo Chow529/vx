@@ -1,0 +1,142 @@
+/* pages/quiz/quiz.wxss */
+.container { padding-bottom: 40rpx; }
+
+.config-section { padding: 20rpx 0; }
+.card { margin: 20rpx 24rpx; padding: 24rpx; }
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+  display: block;
+}
+.form-group { margin-bottom: 24rpx; }
+.label {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+  display: block;
+}
+.picker-value {
+  border: 1rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+.start-btn {
+  margin-top: 20rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 32rpx;
+  border-radius: 16rpx;
+}
+
+.quiz-section { padding: 20rpx 0; }
+.progress-bar {
+  height: 8rpx;
+  background: #e0e0e0;
+  margin: 0 24rpx 12rpx;
+  border-radius: 4rpx;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: #4A90D9;
+  transition: width 0.3s;
+}
+.progress-text {
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.question-card { padding: 28rpx; }
+.q-header { margin-bottom: 16rpx; }
+.q-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 24rpx;
+  line-height: 1.5;
+}
+
+.options { margin-top: 20rpx; }
+.option {
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 16rpx;
+  background: #fafafa;
+}
+.option.selected {
+  border-color: #4A90D9;
+  background: rgba(74, 144, 217, 0.08);
+}
+.option-text { font-size: 28rpx; color: #333; }
+
+.nav-buttons {
+  display: flex;
+  gap: 16rpx;
+  margin: 30rpx 24rpx;
+}
+.btn-secondary {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 28rpx;
+  border-radius: 12rpx;
+  background: #fff;
+  color: #666;
+  border: 1rpx solid #e0e0e0;
+}
+.btn-primary {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 28rpx;
+  border-radius: 12rpx;
+}
+
+.result-section { padding: 20rpx 0; }
+.result-card {
+  text-align: center;
+  padding: 40rpx;
+}
+.score-label {
+  font-size: 28rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 16rpx;
+}
+.score-value {
+  font-size: 72rpx;
+  font-weight: 700;
+  color: #4A90D9;
+  display: block;
+}
+.score-percent {
+  font-size: 32rpx;
+  color: #999;
+  display: block;
+  margin-top: 8rpx;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+.review-num { font-size: 24rpx; color: #999; }
+.correct { color: #52c41a; font-size: 26rpx; font-weight: 600; }
+.wrong { color: #f5222d; font-size: 26rpx; font-weight: 600; }
+.review-q {
+  font-size: 28rpx;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 12rpx;
+}
+.review-answer { font-size: 26rpx; color: #666; display: block; margin-bottom: 8rpx; }
+.review-correct { font-size: 26rpx; color: #52c41a; display: block; margin-bottom: 8rpx; }
+.review-explain { font-size: 24rpx; color: #999; display: block; }

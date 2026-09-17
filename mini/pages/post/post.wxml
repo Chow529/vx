@@ -1,0 +1,39 @@
+<!--pages/post/post.wxml - 发布题目-->
+<view class="container">
+  <view class="card">
+    <!-- 标题 -->
+    <text class="label">标题</text>
+    <input class="input" placeholder="输入题目标题" value="{{title}}" bindinput="onTitleInput" maxlength="100" />
+
+    <!-- 内容 -->
+    <text class="label">题目描述</text>
+    <textarea class="textarea input" placeholder="输入题目描述 (支持 Markdown)" value="{{content}}" bindinput="onContentInput" auto-height maxlength="5000" />
+
+    <!-- 技术栈 -->
+    <text class="label">技术栈</text>
+    <picker mode="selector" range="{{techOptions}}" bindchange="pickTech">
+      <view class="picker-value">{{techStack}} ▾</view>
+    </picker>
+
+    <!-- 难度 -->
+    <text class="label">难度</text>
+    <picker mode="selector" range="{{difficultyOptions}}" bindchange="pickDifficulty">
+      <view class="picker-value">{{difficultyOptions[difficulty - 1]}} ▾</view>
+    </picker>
+
+    <!-- 标签 -->
+    <text class="label">标签 (逗号分隔)</text>
+    <input class="input" placeholder="如: React, Hooks, 前端" value="{{tags}}" bindinput="onTagsInput" />
+
+    <!-- 同步入库 -->
+    <view class="flex-row save-option">
+      <switch checked="{{alsoSaveToMy}}" bindchange="toggleSaveToMy" color="#4A90D9" />
+      <text class="save-label">同时存入我的题库</text>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <button class="btn-primary submit-btn" bindtap="submitPost" disabled="{{submitting}}">
+    {{submitting ? '发布中...' : '发布题目'}}
+  </button>
+</view>

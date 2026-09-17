@@ -1,0 +1,92 @@
+/* pages/profile/profile.wxss */
+.container { padding-bottom: 40rpx; }
+
+.user-header {
+  display: flex;
+  align-items: center;
+  padding: 40rpx 32rpx;
+}
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  margin-right: 28rpx;
+  background: #eee;
+}
+.user-name {
+  font-size: 36rpx;
+  font-weight: 600;
+  display: block;
+}
+.user-reputation {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.stat-row { padding: 12rpx 0; }
+.stat-item { text-align: center; flex: 1; }
+.stat-num {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #4A90D9;
+  display: block;
+}
+.stat-label {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 4rpx;
+}
+
+.progress-item { margin-bottom: 20rpx; }
+.progress-item text { font-size: 24rpx; color: #666; }
+.progress-bar {
+  height: 12rpx;
+  background: #f0f0f0;
+  border-radius: 6rpx;
+  margin-top: 8rpx;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4A90D9, #67b8f5);
+  border-radius: 6rpx;
+  transition: width 0.3s;
+}
+
+.tech-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+.tech-item {
+  width: 50%;
+  padding: 12rpx 0;
+}
+.tech-name {
+  font-size: 26rpx;
+  color: #333;
+}
+.tech-count {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: 8rpx;
+}
+
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+}
+.arrow {
+  color: #ccc;
+  font-size: 36rpx;
+}

@@ -1,0 +1,56 @@
+<!--pages/question-detail/question-detail.wxml - 题目详情-->
+<view class="container">
+  <block wx:if="{{question}}">
+    <!-- 题目标题 -->
+    <view class="card question-card">
+      <view class="q-header">
+        <text class="q-title">{{question.title}}</text>
+      </view>
+
+      <view class="q-meta flex-row">
+        <text class="tag {{question.difficultyClass}}">{{question.difficultyLabel}}</text>
+        <text class="tag mastery-tag" bindtap="cycleMastery">{{question.masteryLabel}}</text>
+        <text class="tag">{{question.tech_stack}}</text>
+        <text class="q-source">来源: {{question.sourceLabel}}</text>
+        <text class="q-time">{{question.createdAt}}</text>
+      </view>
+
+      <view wx:if="{{question.tags.length > 0}}" class="tag-row">
+        <text wx:for="{{question.tags}}" wx:key="*this" class="tag">{{item}}</text>
+      </view>
+    </view>
+
+    <!-- 题目描述 -->
+    <view class="card">
+      <text class="section-title">题目描述</text>
+      <text class="q-content">{{question.content}}</text>
+    </view>
+
+    <!-- 答案区域 -->
+    <view class="card answer-card">
+      <view class="flex-between" bindtap="toggleAnswer">
+        <text class="section-title">答案 {{showAnswer ? '🙈 收起' : '👁 点击查看答案'}}</text>
+      </view>
+
+      <view wx:if="{{showAnswer}}" class="answer-content">
+        <text wx:if="{{question.answer}}" class="answer-text">{{question.answer}}</text>
+        <text wx:else class="answer-empty">暂无答案</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons">
+      <button class="btn-action" bindtap="cycleMastery">
+        掌握程度: {{question.masteryLabel}}
+      </button>
+      <button class="btn-action publish" bindtap="publishToCommunity">
+        发布到社区
+      </button>
+      <button class="btn-action danger" bindtap="deleteQuestion">
+        删除题目
+      </button>
+    </view>
+  </block>
+
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+</view>
