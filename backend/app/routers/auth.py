@@ -21,10 +21,13 @@ async def wx_login(req: WxLoginRequest, db: Session = Depends(get_db)):
     # 查找或创建用户
     user = db.query(User).filter(User.openid == openid).first()
     if not user:
+        # 第一个注册的用户自动成为管理员（软件开发者）
+        is_first = db.query(User).count() == 0
         user = User(
             openid=openid,
             nickname=req.nickname or "知问用户",
             avatar_url=req.avatar_url,
+            is_admin=is_first,
         )
         db.add(user)
         db.commit()

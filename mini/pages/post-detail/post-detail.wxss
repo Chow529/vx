@@ -38,6 +38,8 @@
 .post-actions { margin-top: 16rpx; padding-top: 16rpx; border-top: 1rpx solid #f0f0f0; gap: 24rpx; }
 .action-btn { font-size: 26rpx; color: #999; }
 .action-btn.primary { color: #4A90D9; }
+.action-btn.liked { color: #4A90D9; font-weight: 600; }
+.action-btn.collected { color: #52c41a; font-weight: 600; }
 
 .comments-section { padding: 24rpx; margin-top: 20rpx; }
 .section-title {
@@ -77,8 +79,10 @@
   display: block;
   margin-bottom: 12rpx;
 }
-.comment-actions { margin-top: 8rpx; }
+.comment-actions { margin-top: 8rpx; display: flex; align-items: center; gap: 24rpx; }
 .comment-like { font-size: 24rpx; color: #999; }
+.comment-like.liked { color: #4A90D9; font-weight: 600; }
+.comment-del { font-size: 24rpx; color: #e64a4a; }
 
 .replies {
   background: #f9f9f9;
@@ -117,3 +121,70 @@
 }
 
 .loading { text-align: center; padding: 80rpx 0; color: #999; }
+
+/* 参考答案块 */
+.answer-block {
+  background: #f0f7ff;
+  border-left: 6rpx solid #4A90D9;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  margin: 12rpx 0;
+}
+.answer-title {
+  font-size: 24rpx;
+  color: #4A90D9;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8rpx;
+}
+.answer-content {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+  display: block;
+}
+
+/* 编辑弹窗 */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.modal-card {
+  width: 640rpx;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+}
+.modal-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 20rpx;
+}
+.modal-input {
+  border: 1rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  font-size: 28rpx;
+  margin-bottom: 16rpx;
+}
+.modal-textarea {
+  border: 1rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  font-size: 28rpx;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 120rpx;
+  margin-bottom: 16rpx;
+}
+.modal-btns { justify-content: flex-end; gap: 24rpx; margin-top: 8rpx; }
+.modal-btn { font-size: 28rpx; color: #999; padding: 12rpx 24rpx; }
+.modal-btn.primary { color: #4A90D9; font-weight: 600; }

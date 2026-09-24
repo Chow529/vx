@@ -3,7 +3,6 @@ import json
 import logging
 import time
 import re
-from ollama import chat, list as ollama_list
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +36,18 @@ def _check_available_model():
     if AVAILABLE_MODEL:
         return AVAILABLE_MODEL
     
+    # 懒加载 ollama 库，避免后端启动时因 ollama 不可用而崩溃
+    try:
+        from ollama import list as ollama_list
+    except ImportError:
+        logger.warning("ollama 库未安装，AI 功能不可用")
+        AVAILABLE_MODEL = None
+        return None
+    
     try:
         models_response = ollama_list()
         models = [m.model for m in models_response.get("models", [])]
-        print(f"\n🤖 Ollama 可用模型：{models}")
+        logger.info(f"Ollama 可用模型：{models}")
         
         # 优先使用默认模型
         if OLLAMA_MODEL in models:
@@ -50,16 +57,17 @@ def _check_available_model():
             for fallback in FALLBACK_MODELS:
                 if fallback in models:
                     AVAILABLE_MODEL = fallback
-                    print(f"⚠️  默认模型 {OLLAMA_MODEL} 不可用，使用备用模型：{fallback}")
+                    logger.warning(f"默认模型 {OLLAMA_MODEL} 不可用，使用备用模型：{fallback}")
                     break
         
         if not AVAILABLE_MODEL:
-            print(f"❌ 未找到可用模型，请运行：ollama pull {OLLAMA_MODEL}")
+            logger.warning(f"未找到可用模型，AI 分析功能不可用")
             return None
         
         return AVAILABLE_MODEL
     except Exception as e:
-        print(f"❌ 检查 Ollama 模型失败：{e}")
+        logger.warning(f"检查 Ollama 模型失败：{e}")
+        AVAILABLE_MODEL = None
         return None
 
 
@@ -97,6 +105,13 @@ def analyze_question(question: str, answer: str = "", question_num: int = 0) -> 
         logger.warning("无法获取可用模型，跳过 AI 分析")
         return {"tech_stack": "其他", "difficulty": 1}
     
+    # 懒加载 chat 函数
+    try:
+        from ollama import chat
+    except ImportError:
+        logger.warning("ollama 库未安装，AI 功能不可用")
+        return {"tech_stack": "其他", "difficulty": 1}
+    
     max_retries = 3
     for retry in range(max_retries):
         try:
@@ -108,7 +123,7 @@ def analyze_question(question: str, answer: str = "", question_num: int = 0) -> 
                 ],
                 stream=False,
             )
-            
+            print(response)
             elapsed = time.time() - start_time
             response_text = (response.message.content or "").strip()
             
@@ -252,7 +267,7 @@ def _fallback_parse(text: str) -> dict:
             result["tech_stack"] = ts
             break
     
-    print(f"   🔧 降级解析结果：技术栈={result['tech_stack']}, 难度={result['difficulty']}")
+    logger.info(f"降级解析结果：技术栈={result['tech_stack']}, 难度={result['difficulty']}")
     return result
 
 
@@ -293,6 +308,21 @@ def generate_quiz_questions(questions: list) -> list:
             model_name = _check_available_model()
             if not model_name:
                 # 降级：不生成选项
+                quiz_questions.append(QuizQuestion(
+                    id=question_id,
+                    question=question_text,
+                    options=[answer] if answer else [],
+                    correct_answer=answer,
+                    explanation="",
+                    tech_stack=tech_stack,
+                    difficulty=difficulty,
+                ))
+                continue
+            
+            # 懒加载 chat 函数
+            try:
+                from ollama import chat
+            except ImportError:
                 quiz_questions.append(QuizQuestion(
                     id=question_id,
                     question=question_text,

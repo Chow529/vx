@@ -81,7 +81,10 @@
       <view class="flex-between q-footer">
         <text class="q-source">来源: {{item.source === 'manual' ? '手动录入' : item.source === 'file_import' ? '文件导入' : '社区收藏'}}</text>
         <view class="flex-row">
-          <text class="action-item publish" catchtap="publishToCommunity" data-id="{{item.id}}">发布到社区</text>
+          <text wx:if="{{item.is_published}}" class="badge-published">已发布</text>
+          <text class="action-item publish" catchtap="publishToCommunity" data-id="{{item.id}}">
+            {{item.is_published ? '撤销发布' : '发布到社区'}}
+          </text>
           <text class="action-item" catchtap="deleteQuestion" data-id="{{item.id}}">删除</text>
         </view>
       </view>

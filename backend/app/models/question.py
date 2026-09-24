@@ -40,6 +40,7 @@ class Question(Base):
     mastery = Column(Integer, default=0)
     source = Column(String(32), default="manual")
     source_post_id = Column(Integer, ForeignKey("posts.id"), nullable=True)
+    published_post_id = Column(Integer, nullable=True)  # 已发布到社区的帖子 ID
     is_archived = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

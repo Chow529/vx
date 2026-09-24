@@ -18,6 +18,26 @@ post_tags = Table(
 )
 
 
+# 帖子点赞关联表（用于「点赞只能一次，再点取消」）
+post_likes = Table(
+    "post_likes",
+    Base.metadata,
+    Column("post_id", Integer, ForeignKey("posts.id"), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
+    Column("created_at", DateTime, default=datetime.now),
+)
+
+
+# 评论点赞关联表（同一人对同一评论只能点赞一次，再点取消）
+comment_likes = Table(
+    "comment_likes",
+    Base.metadata,
+    Column("comment_id", Integer, ForeignKey("comments.id"), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
+    Column("created_at", DateTime, default=datetime.now),
+)
+
+
 class Post(Base):
     __tablename__ = "posts"
 
@@ -25,6 +45,7 @@ class Post(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String(256), nullable=False)
     content = Column(Text, nullable=False)
+    answer = Column(Text, default="")  # 参考答案（可不填）
     images = Column(String(1024), default="")  # JSON 数组字符串
     tech_stack = Column(String(64), default="其他")
     difficulty = Column(Integer, default=1)

@@ -61,5 +61,13 @@
 .q-source { font-size: 22rpx; color: #bbb; }
 .action-item { font-size: 24rpx; color: #f5222d; padding: 4rpx 12rpx; }
 .action-item.publish { color: #4A90D9; }
+.badge-published {
+  font-size: 20rpx;
+  color: #52c41a;
+  background: rgba(82, 196, 26, 0.1);
+  border-radius: 8rpx;
+  padding: 2rpx 10rpx;
+  margin-right: 8rpx;
+}
 
 .loading { text-align: center; padding: 30rpx; color: #999; font-size: 24rpx; }

@@ -33,6 +33,8 @@ class QuestionOut(BaseModel):
     mastery: int
     source: str
     is_archived: bool
+    published_post_id: Optional[int] = None
+    is_published: bool = False
     tags: List[str] = []
     created_at: datetime
     updated_at: datetime

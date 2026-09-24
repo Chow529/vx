@@ -63,10 +63,20 @@ class PublicCommentOut(BaseModel):
 
 # Quiz schemas
 class QuizGenerateRequest(BaseModel):
-    count: int = 5
+    count: int = 10
     tech_stack: Optional[str] = None
     difficulty: Optional[int] = None
     source: str = "all"  # all / my_questions
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "count": 10,
+                "tech_stack": "Python",
+                "difficulty": 2,
+                "source": "all"
+            }
+        }
 
 
 class QuizQuestion(BaseModel):

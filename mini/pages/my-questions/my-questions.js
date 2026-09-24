@@ -167,29 +167,24 @@ Page({
     wx.navigateTo({ url: `/pages/question-detail/question-detail?id=${id}` })
   },
 
-  // 发布题目到社区
+  // 发布题目到社区 / 撤销
   publishToCommunity(e) {
     const id = e.currentTarget.dataset.id
-    // 找到题目数据
     const question = this.data.questions.find(q => q.id === id)
     if (!question) return
 
+    const published = question.is_published
     wx.showModal({
-      title: '发布到社区',
-      content: '确定要将此题目发布到社区圈吗？',
+      title: published ? '撤销发布' : '发布到社区',
+      content: published ? '撤销后社区中的对应帖子将被删除，确定吗？' : '确定要将此题目发布到社区圈吗？',
       success: (res) => {
         if (res.confirm) {
-          api.post('/posts/', {
-            title: question.title,
-            content: question.content,
-            tech_stack: question.tech_stack,
-            difficulty: question.difficulty,
-            tags: question.tags || [],
-            also_save_to_my: false
-          }).then(() => {
-            wx.showToast({ title: '发布成功', icon: 'success' })
+          const url = published ? `/questions/${id}/withdraw` : `/questions/${id}/publish`
+          api.post(url, {}).then(() => {
+            wx.showToast({ title: published ? '已撤销' : '发布成功', icon: 'success' })
+            this.loadQuestions()
           }).catch(err => {
-            wx.showToast({ title: '发布失败', icon: 'none' })
+            wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' })
           })
         }
       }

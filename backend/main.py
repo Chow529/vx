@@ -24,6 +24,30 @@ from app.routers import auth, question, post, public_question, quiz
 # 建表
 Base.metadata.create_all(bind=engine)
 
+
+def _run_migrations():
+    """为已存在的表补新增字段（轻量迁移，兼容 SQLite / MySQL）"""
+    from sqlalchemy import text, inspect
+
+    inspector = inspect(engine)
+    add_columns = {
+        "users": [("is_admin", "BOOLEAN DEFAULT 0")],
+        "questions": [("published_post_id", "INTEGER")],
+        "posts": [("answer", "TEXT")],
+    }
+    with engine.begin() as conn:
+        for table, cols in add_columns.items():
+            if not inspector.has_table(table):
+                continue
+            existing = {c["name"] for c in inspector.get_columns(table)}
+            for col_name, col_type in cols:
+                if col_name not in existing:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}"))
+
+
+_run_migrations()
+
+
 app = FastAPI(title="知问库 API", version="1.0.0")
 
 # 跨域 (小程序需要)
@@ -51,3 +75,9 @@ def root():
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("main:app", host="192.168.31.138", port=8000, reload=True)

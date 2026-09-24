@@ -1,5 +1,5 @@
 /* pages/file-import/file-import.wxss */
-.container { padding-bottom: 40rpx; }
+.container { padding-bottom: 120rpx; }
 
 .section-title {
   font-size: 30rpx;
@@ -150,4 +150,24 @@
   line-height: 96rpx;
   font-size: 32rpx;
   border-radius: 16rpx;
+}
+
+/* 底部固定按钮栏 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  padding: 20rpx 24rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.08);
+  z-index: 100;
+}
+.bottom-btn {
+  height: 96rpx;
+  line-height: 96rpx;
+  font-size: 32rpx;
+  border-radius: 16rpx;
+  width: 100%;
 }

@@ -7,11 +7,11 @@ Page({
     loading: false,
     page: 1,
     total: 0,
-    sort: 'latest', // latest / hot / unsolved
+    sort: 'latest', // latest / hot / mine
     sortOptions: [
       { label: '最新', value: 'latest' },
       { label: '最热', value: 'hot' },
-      { label: '未解决', value: 'unsolved' }
+      { label: '我的', value: 'mine' }
     ],
     currentSort: 0
   },
@@ -45,11 +45,15 @@ Page({
 
   loadPosts() {
     this.setData({ loading: true })
-    return api.get('/posts/', {
-      sort: this.data.sort,
-      page: this.data.page,
-      size: 20
-    }).then(res => {
+    const params = { page: this.data.page, size: 20 }
+    if (this.data.sort === 'mine') {
+      // 「我的」标签：只看自己发布的，按最新排序
+      params.mine = true
+      params.sort = 'latest'
+    } else {
+      params.sort = this.data.sort
+    }
+    return api.get('/posts/', params).then(res => {
       const newPosts = res.items.map(p => ({
         ...p,
         difficultyLabel: ['', '简单', '中等', '困难'][p.difficulty],
@@ -72,14 +76,35 @@ Page({
   likePost(e) {
     const id = e.currentTarget.dataset.id
     api.post(`/posts/${id}/like`).then(res => {
-      wx.showToast({ title: '点赞成功', icon: 'success' })
+      // 切换本地状态
+      const posts = this.data.posts.map(p => {
+        if (p.id === id) {
+          return { ...p, is_liked: res.liked, like_count: res.like_count }
+        }
+        return p
+      })
+      this.setData({ posts })
     })
   },
 
   collectToMy(e) {
     const postId = e.currentTarget.dataset.id
-    api.post(`/questions/collect/${postId}`, { post_id: postId, difficulty: 1 }).then(() => {
-      wx.showToast({ title: '已存入题库', icon: 'success' })
+    const post = this.data.posts.find(p => p.id === postId)
+    // 发布时已勾选存入题库的，不能重复收藏
+    if (post && post.is_own && post.is_collected) {
+      wx.showToast({ title: '该题目已在你的题库中', icon: 'none' })
+      return
+    }
+    api.post(`/questions/collect/${postId}`, { post_id: postId, difficulty: 1 }).then(res => {
+      // 切换本地收藏状态
+      const posts = this.data.posts.map(p =>
+        p.id === postId ? { ...p, is_collected: res.collected } : p
+      )
+      this.setData({ posts })
+      wx.showToast({
+        title: res.collected ? `已存入题库${res.remaining_today != null ? '（今日剩余' + res.remaining_today + '）' : ''}` : '已取消收藏',
+        icon: 'none'
+      })
     })
   }
 })

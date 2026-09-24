@@ -24,6 +24,10 @@ def generate_quiz(
     source: "all" = 从公共题库 + 个人题库选题
             "my_questions" = 仅从个人题库选题
     """
+    # 验证题目数量
+    if data.count < 10:
+        raise HTTPException(status_code=400, detail="题目数量最少为 10 题")
+    
     questions = []
     
     if data.source == "my_questions":
@@ -59,9 +63,9 @@ def generate_quiz(
     if not questions:
         raise HTTPException(status_code=400, detail="没有找到符合条件的题目")
     
-    # 随机选择题目
-    count = min(data.count, len(questions))
-    selected = random.sample(questions, count)
+    # 随机选择题目（题库不足时返回全部）
+    actual_count = min(data.count, len(questions))
+    selected = random.sample(questions, actual_count)
     
     # 使用大模型生成答题选项和解析
     quiz_questions = generate_quiz_questions(selected)

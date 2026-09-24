@@ -15,13 +15,6 @@
     </button>
   </view>
 
-  <!-- 解析按钮 -->
-  <view class="card" wx:if="{{fileName && !parsed}}">
-    <button class="btn-primary parse-btn" bindtap="parseFile" disabled="{{parsing}}">
-      {{parsing ? '解析中...' : '开始解析'}}
-    </button>
-  </view>
-
   <!-- 解析结果预览 -->
   <view class="card preview-section" wx:if="{{parsed}}">
     <view class="section-title flex-between">
@@ -74,9 +67,14 @@
     </view>
   </view>
 
-  <!-- 导入按钮 -->
-  <view class="import-btn-wrap" wx:if="{{parsed}}">
-    <button class="btn-primary import-btn" bindtap="importQuestions" disabled="{{submitting || selectedIds.length === 0}}">
+  <!-- 底部按钮区域 -->
+  <view class="bottom-bar">
+    <!-- 未解析时显示解析按钮 -->
+    <button wx:if="{{fileName && !parsed}}" class="btn-primary bottom-btn" bindtap="parseFile" disabled="{{parsing}}">
+      {{parsing ? '解析中...' : '开始解析'}}
+    </button>
+    <!-- 已解析时显示导入按钮 -->
+    <button wx:if="{{parsed}}" class="btn-primary bottom-btn" bindtap="importQuestions" disabled="{{submitting || selectedIds.length === 0}}">
       {{submitting ? '导入中...' : '导入 ' + selectedIds.length + ' 道题目到题库'}}
     </button>
   </view>

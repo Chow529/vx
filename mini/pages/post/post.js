@@ -5,6 +5,7 @@ Page({
   data: {
     title: '',
     content: '',
+    answer: '',
     techStack: '其他',
     difficulty: 1,
     tags: '',
@@ -34,6 +35,7 @@ Page({
 
   onTitleInput(e) { this.setData({ title: e.detail.value }) },
   onContentInput(e) { this.setData({ content: e.detail.value }) },
+  onAnswerInput(e) { this.setData({ answer: e.detail.value }) },
   onTagsInput(e) { this.setData({ tags: e.detail.value }) },
 
   pickTech(e) {
@@ -50,7 +52,7 @@ Page({
   },
 
   submitPost() {
-    const { title, content, techStack, difficulty, tags, alsoSaveToMy } = this.data
+    const { title, content, answer, techStack, difficulty, tags, alsoSaveToMy } = this.data
     if (!title.trim()) {
       wx.showToast({ title: '请输入标题', icon: 'none' })
       return
@@ -66,6 +68,7 @@ Page({
     api.post('/posts/', {
       title: title.trim(),
       content: content.trim(),
+      answer: answer.trim(),
       tech_stack: techStack,
       difficulty,
       tags: tagList,
@@ -73,7 +76,7 @@ Page({
     }).then(() => {
       wx.showToast({ title: '发布成功', icon: 'success' })
       this.setData({
-        title: '', content: '', tags: '',
+        title: '', content: '', answer: '', tags: '',
         techStack: '其他', difficulty: 1, alsoSaveToMy: false
       })
       // 跳转到社区首页

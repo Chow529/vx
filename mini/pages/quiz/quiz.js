@@ -5,7 +5,7 @@ Page({
   data: {
     // 配置阶段
     step: 'config', // config / quiz / result
-    count: 5,
+    count: 10,
     source: 'all', // all / my_questions
     tech_stack: '',
     difficulty: '',
@@ -30,8 +30,20 @@ Page({
     }).catch(() => {})
   },
 
-  onCountChange(e) {
-    this.setData({ count: Number(e.detail.value) + 1 })
+  onCountInput(e) {
+    // 输入时只更新值，不做校验
+    const val = e.detail.value
+    this.setData({ count: val === '' ? '' : parseInt(val) || 10 })
+  },
+
+  onCountBlur() {
+    // 失焦时才校验
+    let count = parseInt(this.data.count) || 10
+    if (count < 10) {
+      count = 10
+      wx.showToast({ title: '最少 10 题', icon: 'none' })
+    }
+    this.setData({ count })
   },
 
   onSourceChange(e) {
@@ -51,6 +63,12 @@ Page({
   },
 
   startQuiz() {
+    // 前端验证
+    if (this.data.count < 10) {
+      wx.showToast({ title: '最少 10 题', icon: 'none' })
+      return
+    }
+
     wx.showLoading({ title: 'AI 正在出题...' })
     
     const params = {
@@ -62,6 +80,16 @@ Page({
 
     api.post('/quiz/generate', params).then(res => {
       wx.hideLoading()
+      
+      // 如果返回的题目数量少于请求数量，提示用户
+      if (res.total < this.data.count) {
+        wx.showToast({
+          title: `题库不足，已出 ${res.total} 题`,
+          icon: 'none',
+          duration: 2000
+        })
+      }
+      
       this.setData({
         step: 'quiz',
         questions: res.questions,

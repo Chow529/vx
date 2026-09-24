@@ -1,4 +1,6 @@
 """个人题库路由"""
+import logging
+from datetime import datetime, time as dtime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
@@ -11,11 +13,17 @@ from ..schemas.question import (
     QuestionCreate, QuestionUpdate, QuestionOut, QuestionListOut,
     FileParseResult, ParsedQA, CollectFromPost,
 )
-from ..models.post import Post
+from ..models.post import Post, Comment, post_likes
 from ..services import vector_service
 from ..services.ai_service import analyze_question
+from ..services.moderation_service import check_content
 from ..utils.auth import get_current_user
 from ..utils.parser import parse_file
+
+logger = logging.getLogger(__name__)
+
+# 每人每天最多收藏数量
+DAILY_COLLECT_LIMIT = 10
 
 router = APIRouter(prefix="/questions", tags=["题库"])
 
@@ -136,12 +144,27 @@ def delete_question(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """删除题目"""
+    """删除题目（若已发布社区，同步删除对应帖子及其评论、点赞）"""
     question = _get_user_question(question_id, user.id, db)
+
+    # 级联删除已发布的社区帖子
+    if question.published_post_id:
+        _delete_post_cascade(question.published_post_id, db)
+
     vector_service.remove_question(question.id)
     db.delete(question)
     db.commit()
     return {"ok": True}
+
+
+def _delete_post_cascade(post_id: int, db: Session):
+    """删除帖子并清理其评论、点赞关联（不 commit，供复用）"""
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        return
+    db.query(Comment).filter(Comment.post_id == post_id).delete(synchronize_session=False)
+    db.execute(post_likes.delete().where(post_likes.c.post_id == post_id))
+    db.delete(post)
 
 
 @router.post("/{question_id}/mastery")
@@ -186,17 +209,13 @@ async def upload_and_parse(
     user: User = Depends(get_current_user),
 ):
     """上传文件并解析为 QA 对，通过 AI 自动判断技术栈和难度"""
-    print("\n" + "="*70)
-    print(" 文件上传接口被调用")
-    print(f"用户 ID: {user.id}")
-    print("="*70)
+    logger.info(f"文件上传接口被调用，用户 ID: {user.id}")
     
     content = await file.read()
     if not content:
         raise HTTPException(status_code=400, detail="文件为空")
 
-    print(f"\n📄 文件大小：{len(content) / 1024:.2f} KB")
-    print(f"📝 文件名：{file.filename}")
+    logger.info(f"文件大小：{len(content) / 1024:.2f} KB，文件名：{file.filename}")
     
     try:
         items = parse_file(file.filename or "unknown", content)
@@ -207,7 +226,7 @@ async def upload_and_parse(
     from ..schemas.question import ParsedQA
     from ..services.ai_service import analyze_batch
     
-    print(f"\n🤖 开始 AI 分析 {len(items)} 道题...")
+    logger.info(f"开始 AI 分析 {len(items)} 道题...")
     
     # 准备批量分析的数据
     qa_list = [{"question": item.question, "answer": item.answer} for item in items]
@@ -223,9 +242,7 @@ async def upload_and_parse(
             difficulty=analysis["difficulty"],
         ))
 
-    print(f"\n✅ 文件解析和 AI 分析全部完成！")
-    print(f"   共 {len(analyzed_items)} 道题")
-    print("="*70 + "\n")
+    logger.info(f"文件解析和 AI 分析完成，共 {len(analyzed_items)} 道题")
 
     return FileParseResult(filename=file.filename or "unknown", items=analyzed_items)
 
@@ -258,22 +275,53 @@ def import_questions(
     return {"ok": True, "count": len(created), "ids": created}
 
 
-@router.post("/collect/{post_id}", response_model=QuestionOut)
+@router.post("/collect/{post_id}")
 def collect_from_post(
     post_id: int,
     data: CollectFromPost,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """从社区收藏题目到个人题库"""
+    """从社区收藏题目到个人题库（切换：已收藏则取消）"""
     post = db.query(Post).filter(Post.id == post_id).first()
     if not post:
         raise HTTPException(status_code=404, detail="帖子不存在")
+
+    # 自己发布时已勾选存入题库的，无需重复收藏
+    own_saved = db.query(Question).filter(
+        Question.user_id == user.id,
+        Question.published_post_id == post_id,
+    ).first()
+    if own_saved:
+        raise HTTPException(status_code=400, detail="该题目已在你的题库中")
+
+    # 已收藏则取消
+    existing = db.query(Question).filter(
+        Question.user_id == user.id,
+        Question.source == "community",
+        Question.source_post_id == post_id,
+    ).first()
+    if existing:
+        vector_service.remove_question(existing.id)
+        db.delete(existing)
+        db.commit()
+        return {"ok": True, "collected": False}
+
+    # 每天最多收藏 10 题
+    today_start = datetime.combine(datetime.now().date(), dtime.min)
+    collected_today = db.query(Question).filter(
+        Question.user_id == user.id,
+        Question.source == "community",
+        Question.created_at >= today_start,
+    ).count()
+    if collected_today >= DAILY_COLLECT_LIMIT:
+        raise HTTPException(status_code=400, detail=f"每天最多收藏 {DAILY_COLLECT_LIMIT} 个题目")
 
     question = Question(
         user_id=user.id,
         title=post.title,
         content=post.content,
+        answer=post.answer or "",
         tech_stack=post.tech_stack,
         difficulty=data.difficulty,
         source="community",
@@ -286,6 +334,78 @@ def collect_from_post(
     db.refresh(question)
 
     vector_service.add_question(question.id, f"{question.title}\n{question.content}")
+    remaining = DAILY_COLLECT_LIMIT - collected_today - 1
+    return {"ok": True, "collected": True, "question_id": question.id, "remaining_today": remaining}
+
+
+@router.post("/{question_id}/publish", response_model=QuestionOut)
+def publish_to_community(
+    question_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """将个人题目发布到社区（已发布则拒绝，需先撤销）"""
+    question = _get_user_question(question_id, user.id, db)
+
+    # 防重复发布
+    if question.published_post_id:
+        existing = db.query(Post).filter(Post.id == question.published_post_id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="该题目已发布到社区，请先撤销后再发布")
+        else:
+            # 帖子已被删除，清理脏数据
+            question.published_post_id = None
+
+    # 内容审查
+    for field, value in [("标题", question.title), ("内容", question.content)]:
+        result = check_content(value)
+        if not result["ok"]:
+            logger.warning(f"发布社区{field}审查未通过：{result['reason']}")
+            raise HTTPException(status_code=400, detail="含有违规内容")
+
+    post = Post(
+        user_id=user.id,
+        title=question.title,
+        content=question.content,
+        answer=question.answer or "",
+        tech_stack=question.tech_stack,
+        difficulty=question.difficulty,
+    )
+    tag_names = [t.name for t in question.tags]
+    tags = []
+    for name in tag_names:
+        t = db.query(Tag).filter(Tag.name == name).first()
+        if not t:
+            t = Tag(name=name)
+            db.add(t)
+            db.flush()
+        tags.append(t)
+    post.tags = tags
+
+    db.add(post)
+    db.flush()
+    question.published_post_id = post.id
+    db.commit()
+    db.refresh(question)
+    return _question_to_out(question)
+
+
+@router.post("/{question_id}/withdraw", response_model=QuestionOut)
+def withdraw_from_community(
+    question_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """从社区撤销已发布的题目（删除对应帖子及其评论、点赞）"""
+    question = _get_user_question(question_id, user.id, db)
+
+    if not question.published_post_id:
+        raise HTTPException(status_code=400, detail="该题目尚未发布")
+
+    _delete_post_cascade(question.published_post_id, db)
+    question.published_post_id = None
+    db.commit()
+    db.refresh(question)
     return _question_to_out(question)
 
 
@@ -390,6 +510,8 @@ def _question_to_out(q: Question) -> QuestionOut:
         mastery=q.mastery,
         source=q.source,
         is_archived=q.is_archived,
+        published_post_id=q.published_post_id,
+        is_published=bool(q.published_post_id),
         tags=[t.name for t in q.tags],
         created_at=q.created_at,
         updated_at=q.updated_at,

@@ -6,10 +6,8 @@
       <text class="section-title">出题配置</text>
       
       <view class="form-group">
-        <text class="label">题目数量</text>
-        <picker mode="selector" range="{{[1,3,5,10,15,20]}}" value="{{count - 1}}" bindchange="onCountChange">
-          <view class="picker-value">{{count}} 题 ▾</view>
-        </picker>
+        <text class="label">题目数量（最少 10 题）</text>
+        <input class="input" type="number" placeholder="输入题目数量" value="{{count}}" bindinput="onCountInput" bindblur="onCountBlur" />
       </view>
 
       <view class="form-group">

@@ -1,4 +1,5 @@
 """公共题库路由"""
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -12,7 +13,10 @@ from ..schemas.public_question import (
     PublicQuestionCreate, PublicQuestionUpdate, PublicQuestionOut,
     PublicQuestionListOut, PublicCommentCreate, PublicCommentOut,
 )
-from ..utils.auth import get_current_user
+from ..services.moderation_service import check_content
+from ..utils.auth import get_current_user, can_manage
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/public-questions", tags=["公共题库"])
 
@@ -52,6 +56,15 @@ def create_public_question(
     db: Session = Depends(get_db),
 ):
     """上传题目到公共题库"""
+    # 内容审查
+    for field, value in [("标题", data.title), ("内容", data.content), ("答案", data.answer)]:
+        if not value:
+            continue
+        result = check_content(value)
+        if not result["ok"]:
+            logger.warning(f"公共题目{field}审查未通过：{result['reason']}")
+            raise HTTPException(status_code=400, detail="含有违规内容")
+
     question = PublicQuestion(
         user_id=user.id,
         title=data.title,
@@ -89,14 +102,24 @@ def update_public_question(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """编辑公共题目（仅上传者）"""
+    """编辑公共题目（上传者或管理员）"""
     question = db.query(PublicQuestion).filter(PublicQuestion.id == question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="题目不存在")
-    if question.user_id != user.id:
-        raise HTTPException(status_code=403, detail="只有上传者可以编辑")
+    if not can_manage(user, question.user_id):
+        raise HTTPException(status_code=403, detail="只有上传者或管理员可以编辑")
 
-    for field, value in data.model_dump(exclude_unset=True).items():
+    # 内容审查
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        if not value:
+            continue
+        result = check_content(value)
+        if not result["ok"]:
+            logger.warning(f"公共题目{field}审查未通过：{result['reason']}")
+            raise HTTPException(status_code=400, detail="含有违规内容")
+
+    for field, value in update_data.items():
         setattr(question, field, value)
 
     db.commit()
@@ -110,12 +133,12 @@ def delete_public_question(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """删除公共题目（仅上传者）"""
+    """删除公共题目（上传者或管理员）"""
     question = db.query(PublicQuestion).filter(PublicQuestion.id == question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="题目不存在")
-    if question.user_id != user.id:
-        raise HTTPException(status_code=403, detail="只有上传者可以删除")
+    if not can_manage(user, question.user_id):
+        raise HTTPException(status_code=403, detail="只有上传者或管理员可以删除")
 
     db.delete(question)
     db.commit()
@@ -145,6 +168,12 @@ def create_comment(
     if not question:
         raise HTTPException(status_code=404, detail="题目不存在")
 
+    # 内容审查
+    result = check_content(data.content)
+    if not result["ok"]:
+        logger.warning(f"公共题目评论审查未通过：{result['reason']}")
+        raise HTTPException(status_code=400, detail="含有违规内容")
+
     comment = PublicComment(
         question_id=question_id,
         user_id=user.id,
@@ -164,15 +193,18 @@ def delete_comment(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """删除评论（仅上传者）"""
+    """删除评论（评论作者、题目上传者或管理员）"""
     comment = db.query(PublicComment).filter(PublicComment.id == comment_id).first()
     if not comment:
         raise HTTPException(status_code=404, detail="评论不存在")
-    if comment.user_id != user.id:
-        raise HTTPException(status_code=403, detail="只有评论者可以删除")
+
+    question = db.query(PublicQuestion).filter(PublicQuestion.id == question_id).first()
+
+    # 评论作者、题目上传者、管理员均可删除
+    if not (can_manage(user, comment.user_id) or (question and user.id == question.user_id)):
+        raise HTTPException(status_code=403, detail="无权删除该评论")
 
     # 更新题目的评论计数
-    question = db.query(PublicQuestion).filter(PublicQuestion.id == question_id).first()
     if question:
         question.comment_count = max(0, question.comment_count - 1)
 

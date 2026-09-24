@@ -1,22 +1,32 @@
 <!--pages/question-detail/question-detail.wxml - 题目详情-->
 <view class="container">
   <block wx:if="{{question}}">
-    <!-- 题目标题 -->
+    <!-- 题目标题 + 标签 -->
     <view class="card question-card">
-      <view class="q-header">
+      <view class="q-head">
         <text class="q-title">{{question.title}}</text>
+        <text class="pub-badge {{question.is_published ? 'on' : 'off'}}">
+          {{question.is_published ? '已发布' : '未发布'}}
+        </text>
       </view>
-
-      <view class="q-meta flex-row">
+      <view class="tag-row">
         <text class="tag {{question.difficultyClass}}">{{question.difficultyLabel}}</text>
-        <text class="tag mastery-tag" bindtap="cycleMastery">{{question.masteryLabel}}</text>
-        <text class="tag">{{question.tech_stack}}</text>
-        <text class="q-source">来源: {{question.sourceLabel}}</text>
+        <text class="tag blue">{{question.tech_stack}}</text>
+        <text wx:for="{{question.tags}}" wx:key="*this" class="tag">{{item}}</text>
+      </view>
+      <view class="q-source-row">
+        <text class="q-source">来源：{{question.sourceLabel}}</text>
         <text class="q-time">{{question.createdAt}}</text>
       </view>
+    </view>
 
-      <view wx:if="{{question.tags.length > 0}}" class="tag-row">
-        <text wx:for="{{question.tags}}" wx:key="*this" class="tag">{{item}}</text>
+    <!-- 掌握程度分段控件 -->
+    <view class="card mastery-card">
+      <text class="section-title">掌握程度</text>
+      <view class="segmented">
+        <view class="seg-item {{question.mastery === 0 ? 'active' : ''}}" bindtap="setMastery" data-value="0">未掌握</view>
+        <view class="seg-item {{question.mastery === 1 ? 'active' : ''}}" bindtap="setMastery" data-value="1">学习中</view>
+        <view class="seg-item {{question.mastery === 2 ? 'active' : ''}}" bindtap="setMastery" data-value="2">已掌握</view>
       </view>
     </view>
 
@@ -28,27 +38,47 @@
 
     <!-- 答案区域 -->
     <view class="card answer-card">
-      <view class="flex-between" bindtap="toggleAnswer">
-        <text class="section-title">答案 {{showAnswer ? '🙈 收起' : '👁 点击查看答案'}}</text>
+      <view class="answer-toggle flex-between" bindtap="toggleAnswer">
+        <text class="section-title">答案</text>
+        <text class="toggle-text">{{showAnswer ? '收起 ▲' : '点击查看 ▼'}}</text>
       </view>
-
       <view wx:if="{{showAnswer}}" class="answer-content">
         <text wx:if="{{question.answer}}" class="answer-text">{{question.answer}}</text>
         <text wx:else class="answer-empty">暂无答案</text>
       </view>
     </view>
 
-    <!-- 操作按钮 -->
-    <view class="action-buttons">
-      <button class="btn-action" bindtap="cycleMastery">
-        掌握程度: {{question.masteryLabel}}
-      </button>
-      <button class="btn-action publish" bindtap="publishToCommunity">
-        发布到社区
-      </button>
-      <button class="btn-action danger" bindtap="deleteQuestion">
-        删除题目
-      </button>
+    <!-- 编辑弹窗 -->
+    <view class="modal-mask" wx:if="{{editing}}" bindtap="closeEdit">
+      <view class="modal-body" catchtap="noop">
+        <text class="modal-title">编辑题目</text>
+        <view class="modal-form">
+          <text class="m-label">标题</text>
+          <input class="m-input" value="{{editForm.title}}" data-field="title" bindinput="onEditInput" />
+          <text class="m-label">内容</text>
+          <textarea class="m-input m-textarea" value="{{editForm.content}}" data-field="content" bindinput="onEditInput" />
+          <text class="m-label">答案</text>
+          <textarea class="m-input m-textarea" value="{{editForm.answer}}" data-field="answer" bindinput="onEditInput" />
+          <text class="m-label">技术栈</text>
+          <input class="m-input" value="{{editForm.tech_stack}}" data-field="tech_stack" bindinput="onEditInput" />
+          <text class="m-label">难度</text>
+          <picker mode="selector" range="{{difficultyOptions}}" value="{{editForm.difficulty - 1}}" bindchange="onEditDifficulty">
+            <view class="m-input">{{difficultyOptions[editForm.difficulty - 1]}} ▾</view>
+          </picker>
+        </view>
+        <view class="modal-actions">
+          <button class="m-btn cancel" bindtap="closeEdit">取消</button>
+          <button class="m-btn confirm" bindtap="saveEdit">保存</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作栏 -->
+    <view class="action-bar">
+      <view class="bar-btn ghost" bindtap="openEdit">编辑</view>
+      <view wx:if="{{!question.is_published}}" class="bar-btn primary" bindtap="publishToCommunity">发布社区</view>
+      <view wx:else class="bar-btn warn" bindtap="withdrawFromCommunity">撤销发布</view>
+      <view class="bar-btn danger" bindtap="deleteQuestion">删除</view>
     </view>
   </block>
 

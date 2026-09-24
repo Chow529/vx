@@ -16,6 +16,12 @@
 
       <text class="post-content">{{post.content}}</text>
 
+      <!-- 参考答案 -->
+      <view wx:if="{{post.answer}}" class="answer-block">
+        <text class="answer-title">参考答案</text>
+        <text class="answer-content">{{post.answer}}</text>
+      </view>
+
       <view class="tag-row">
         <text class="tag">{{post.tech_stack}}</text>
         <text class="tag {{post.difficultyClass}}">{{post.difficultyLabel}}</text>
@@ -23,9 +29,12 @@
       </view>
 
       <view class="post-actions flex-row">
-        <text class="action-btn" bindtap="likePost">👍 {{post.like_count}}</text>
+        <text class="action-btn {{post.is_liked ? 'liked' : ''}}" bindtap="likePost">👍 {{post.like_count}}</text>
         <text class="action-btn">💬 {{post.comment_count}}</text>
-        <text class="action-btn primary" bindtap="collectToMy">⭐ 存入题库</text>
+        <text class="action-btn primary {{post.is_collected ? 'collected' : ''}}" bindtap="collectToMy">
+          ⭐ {{post.is_collected ? '已在题库' : '存入题库'}}
+        </text>
+        <text wx:if="{{post.can_manage}}" class="action-btn primary" bindtap="openEdit">✏️ 编辑</text>
       </view>
     </view>
 
@@ -44,9 +53,10 @@
         </view>
         <text class="comment-content">{{item.content}}</text>
         <view class="comment-actions">
-          <text class="comment-like" bindtap="likeComment" data-id="{{item.id}}">
+          <text class="comment-like {{item.is_liked ? 'liked' : ''}}" bindtap="likeComment" data-id="{{item.id}}">
             👍 {{item.like_count}}
           </text>
+          <text wx:if="{{item.can_delete}}" class="comment-del" catchtap="deleteComment" data-id="{{item.id}}">删除</text>
         </view>
 
         <!-- 子回复 -->
@@ -54,6 +64,7 @@
           <view wx:for="{{item.replies}}" wx:for-item="reply" wx:key="id" class="reply-item">
             <text class="reply-author">{{reply.user_nickname}}:</text>
             <text class="reply-content">{{reply.content}}</text>
+            <text wx:if="{{reply.can_delete}}" class="comment-del" catchtap="deleteComment" data-id="{{reply.id}}">删除</text>
           </view>
         </view>
       </view>
@@ -66,5 +77,19 @@
   <view class="comment-input-bar" wx:if="{{post}}">
     <input class="comment-input" placeholder="写下你的评论..." value="{{commentText}}" bindinput="onCommentInput" />
     <text class="comment-submit" bindtap="submitComment">发送</text>
+  </view>
+
+  <!-- 编辑帖子弹窗 -->
+  <view class="modal-mask" wx:if="{{showEdit}}" bindtap="closeEdit">
+    <view class="modal-card" catchtap>
+      <text class="modal-title">编辑题目</text>
+      <input class="modal-input" placeholder="标题" value="{{editTitle}}" bindinput="onEditTitleInput" maxlength="100" />
+      <textarea class="modal-textarea" placeholder="题目描述" value="{{editContent}}" bindinput="onEditContentInput" auto-height maxlength="5000" />
+      <textarea class="modal-textarea" placeholder="参考答案 (可不填)" value="{{editAnswer}}" bindinput="onEditAnswerInput" auto-height maxlength="5000" />
+      <view class="modal-btns flex-row">
+        <text class="modal-btn" bindtap="closeEdit">取消</text>
+        <text class="modal-btn primary" bindtap="saveEdit">{{editing ? '保存中...' : '保存'}}</text>
+      </view>
+    </view>
   </view>
 </view>
