@@ -4,9 +4,11 @@ import logging
 import time
 import re
 
+from ..config import settings
+
 logger = logging.getLogger(__name__)
 
-OLLAMA_MODEL = "qwen3.5:2b"  # 默认模型
+OLLAMA_MODEL = settings.ollama_chat_model  # 默认对话模型
 FALLBACK_MODELS = ["qwen3:4b", "qwen2.5:7b", "llama3.2:3b", "deepseek-r1:7b"]
 
 AVAILABLE_MODEL = None
@@ -81,25 +83,23 @@ def analyze_question(question: str, answer: str = "", question_num: int = 0) -> 
         return {"tech_stack": "其他", "difficulty": 1}
 
     prompt = f"""请分析以下编程题目，判断它的技术栈分类和难度等级。
+                题目：{question}
+                答案：{answer if answer else '无'}
 
-题目：{question}
-答案：{answer if answer else '无'}
+                可选的技术栈分类（只能选一个最相关的）：
+                {', '.join(TECH_STACKS)}
 
-可选的技术栈分类（只能选一个最相关的）：
-{', '.join(TECH_STACKS)}
+                可选的难度等级：
+                1 = 简单（基础概念、语法题）
+                2 = 中等（需要一定理解、应用场景）
+                3 = 困难（复杂原理、底层机制、综合应用）
 
-可选的难度等级：
-1 = 简单（基础概念、语法题）
-2 = 中等（需要一定理解、应用场景）
-3 = 困难（复杂原理、底层机制、综合应用）
+                请严格按照以下 JSON 格式返回，不要有其他内容：
+                {{"tech_stack": "技术栈名称", "difficulty": 1}}
 
-请严格按照以下 JSON 格式返回，不要有其他内容：
-{{"tech_stack": "技术栈名称", "difficulty": 1}}
-
-只返回 JSON，不要解释。"""
-
+                只返回 JSON，不要解释。"""
     start_time = time.time()
-    
+
     model_name = _check_available_model()
     if not model_name:
         logger.warning("无法获取可用模型，跳过 AI 分析")
@@ -123,10 +123,8 @@ def analyze_question(question: str, answer: str = "", question_num: int = 0) -> 
                 ],
                 stream=False,
             )
-            print(response)
             elapsed = time.time() - start_time
             response_text = (response.message.content or "").strip()
-            
             logger.info(f"AI 响应时间：{elapsed:.2f}秒")
             
             if not response_text:
@@ -181,23 +179,6 @@ def analyze_question(question: str, answer: str = "", question_num: int = 0) -> 
             return {"tech_stack": "其他", "difficulty": 1}
     
     return {"tech_stack": "其他", "difficulty": 1}
-
-
-def analyze_batch(questions: list) -> list:
-    """批量分析题目"""
-    logger.info(f"开始 AI 批量分析，题目总数：{len(questions)}")
-    
-    results = []
-    for i, q in enumerate(questions, 1):
-        result = analyze_question(
-            q.get("question", ""), 
-            q.get("answer", ""),
-            question_num=i
-        )
-        results.append(result)
-    
-    logger.info(f"AI 批量分析完成，共 {len(results)} 道题")
-    return results
 
 
 def _fuzzy_match_tech_stack(tech_stack: str) -> str:

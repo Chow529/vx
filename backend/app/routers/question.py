@@ -1,17 +1,20 @@
 """个人题库路由"""
+import json
 import logging
-from datetime import datetime, time as dtime
+from datetime import datetime, timedelta, time as dtime, date as date_type
 from typing import Optional
+from urllib.parse import unquote
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.user import User
-from ..models.question import Question, Tag, question_tags
+from ..models.question import Question, Tag
 from ..schemas.question import (
     QuestionCreate, QuestionUpdate, QuestionOut, QuestionListOut,
-    FileParseResult, ParsedQA, CollectFromPost,
+    CollectFromPost,
 )
 from ..models.post import Post, Comment, post_likes
 from ..services import vector_service
@@ -35,6 +38,8 @@ def list_questions(
     mastery: Optional[int] = None,
     archived: bool = False,
     keyword: Optional[str] = None,
+    date_from: Optional[date_type] = None,
+    date_to: Optional[date_type] = None,
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     user: User = Depends(get_current_user),
@@ -49,6 +54,11 @@ def list_questions(
         q = q.filter(Question.difficulty == difficulty)
     if mastery is not None:
         q = q.filter(Question.mastery == mastery)
+    # 导入时间段（含首尾两天）
+    if date_from:
+        q = q.filter(Question.created_at >= datetime.combine(date_from, dtime.min))
+    if date_to:
+        q = q.filter(Question.created_at < datetime.combine(date_to, dtime.min) + timedelta(days=1))
     if keyword:
         # 语义搜索
         results = vector_service.search_similar(keyword, top_k=50)
@@ -203,48 +213,76 @@ def batch_set_mastery(
     return {"ok": True, "count": len(questions)}
 
 
-@router.post("/upload", response_model=FileParseResult)
+@router.post("/upload")
 async def upload_and_parse(
-    file: UploadFile = File(...),
+    request: Request,
     user: User = Depends(get_current_user),
 ):
-    """上传文件并解析为 QA 对，通过 AI 自动判断技术栈和难度"""
-    logger.info(f"文件上传接口被调用，用户 ID: {user.id}")
-    
-    content = await file.read()
+    """上传文件并流式返回解析结果 (NDJSON，每行一条)
+
+    请求体为文件原始字节，文件名放在 X-Filename 头（URL 编码）。
+    每完成一条 AI 分析立即推送，前端可边收边展示；
+    客户端中断请求时生成器随之终止，不再继续分析。
+    """
+    filename = unquote(request.headers.get("x-filename") or "unknown")
+    content = await request.body()
+    logger.info(f"流式解析开始，用户 ID: {user.id}，文件：{filename}，大小：{len(content) / 1024:.2f} KB")
+
     if not content:
         raise HTTPException(status_code=400, detail="文件为空")
 
-    logger.info(f"文件大小：{len(content) / 1024:.2f} KB，文件名：{file.filename}")
-    
+    # 解析文件（快），格式错误直接返回 400
     try:
-        items = parse_file(file.filename or "unknown", content)
+        items = parse_file(filename, content)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    # 通过 AI 批量分析每道题的技术栈和难度
-    from ..schemas.question import ParsedQA
-    from ..services.ai_service import analyze_batch
-    
-    logger.info(f"开始 AI 分析 {len(items)} 道题...")
-    
-    # 准备批量分析的数据
-    qa_list = [{"question": item.question, "answer": item.answer} for item in items]
-    analyses = analyze_batch(qa_list)
-    
-    # 构建结果
-    analyzed_items = []
-    for item, analysis in zip(items, analyses):
-        analyzed_items.append(ParsedQA(
-            question=item.question,
-            answer=item.answer,
-            tech_stack=analysis["tech_stack"],
-            difficulty=analysis["difficulty"],
-        ))
+    if not items:
+        raise HTTPException(status_code=400, detail="未能从文件中解析出题目")
 
-    logger.info(f"文件解析和 AI 分析完成，共 {len(analyzed_items)} 道题")
+    return StreamingResponse(
+        _stream_analyze(filename, items),
+        media_type="application/x-ndjson",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
-    return FileParseResult(filename=file.filename or "unknown", items=analyzed_items)
+
+def _stream_analyze(filename: str, items: list):
+    """同步生成器：逐条 AI 分析并以 NDJSON 推送
+
+    使用同步生成器，FastAPI 会自动放到线程池迭代，
+    避免 ollama 的阻塞调用卡住事件循环。
+    每条分析结果实时打印到后端控制台（flush 保证不被缓冲）。
+    """
+    def line(obj: dict) -> str:
+        return json.dumps(obj, ensure_ascii=False) + "\n"
+
+    total = len(items)
+    print(f"\n{'=' * 64}\n开始解析：{filename}　共 {total} 条\n{'=' * 64}", flush=True)
+    yield line({"type": "start", "filename": filename, "total": total})
+
+    done = 0
+    for i, item in enumerate(items):
+        answer = item.answer or "无"
+        print(f"\n[{i + 1}/{total}] question: {item.question}", flush=True)
+        print(f"          answer: {answer[:300]}{'...' if len(answer) > 300 else ''}", flush=True)
+
+        analysis = analyze_question(item.question, item.answer, i + 1)
+        print(f"          → 技术栈={analysis['tech_stack']}　难度={analysis['difficulty']}", flush=True)
+
+        yield line({
+            "type": "item",
+            "index": i,
+            "question": item.question,
+            "answer": item.answer,
+            "section": item.section,
+            "tech_stack": analysis["tech_stack"],
+            "difficulty": analysis["difficulty"],
+        })
+        done += 1
+
+    print(f"\n{'-' * 64}\n解析完成：{filename}　已推送 {done}/{total} 条\n{'=' * 64}", flush=True)
+    yield line({"type": "done", "count": done})
 
 
 @router.post("/import")
@@ -255,6 +293,7 @@ def import_questions(
 ):
     """批量导入解析后的 QA 对到题库"""
     created = []
+    pending_vectors = []
     for item in items:
         question = Question(
             user_id=user.id,
@@ -268,10 +307,18 @@ def import_questions(
         _apply_tags(question, item.tags, db)
         db.add(question)
         db.flush()
-        vector_service.add_question(question.id, f"{question.title}\n{question.content}")
         created.append(question.id)
+        pending_vectors.append((question.id, f"{question.title}\n{question.content}"))
 
     db.commit()
+
+    # 向量入库放在 commit 之后，且单条失败不影响整体导入
+    for qid, text in pending_vectors:
+        try:
+            vector_service.add_question(qid, text)
+        except Exception as e:
+            logger.warning(f"题目 {qid} 向量入库失败（不影响题库）：{e}")
+
     return {"ok": True, "count": len(created), "ids": created}
 
 

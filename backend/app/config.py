@@ -29,8 +29,10 @@ class Settings(BaseSettings):
     # 也可通过 DATABASE_URL 直接覆盖自动拼装的连接串（可选）
     database_url: str = ""
 
-    # 向量模型
-    embedding_model: str = "shibing624/text2vec-base-chinese"
+    # ─── Ollama 本地大模型 ───
+    ollama_host: str = "http://localhost:11434"
+    ollama_chat_model: str = "qwen3.5:2b"            # 出题 / 分析技术栈难度
+    ollama_embed_model: str = "qwen3-embedding:0.6b"  # 向量化（语义搜索），1024 维
 
     @model_validator(mode="after")
     def _build_database_url(self):

@@ -3,6 +3,9 @@ const api = require('../../utils/api')
 
 Page({
   data: {
+    // 功能开发中：为 true 时页面只显示占位提示，恢复功能改成 false 即可
+    developing: true,
+
     // 配置阶段
     step: 'config', // config / quiz / result
     count: 10,
@@ -19,6 +22,7 @@ Page({
   },
 
   onLoad() {
+    if (this.data.developing) return  // 开发中不请求接口
     this.loadTechStacks()
   },
 

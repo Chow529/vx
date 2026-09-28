@@ -61,7 +61,7 @@
 .time { font-size: 22rpx; color: #bbb; }
 
 .actions { gap: 20rpx; }
-.action-item { font-size: 24rpx; color: #999; }
+.action-item { font-size: 24rpx; color: #999; line-height: 1; }
 .action-item.liked { color: #4A90D9; font-weight: 600; }
 .collect-btn { color: #4A90D9; }
 .collect-btn.collected { color: #52c41a; font-weight: 600; }

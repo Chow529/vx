@@ -10,13 +10,24 @@ Page({
     // 编辑弹窗
     editing: false,
     editForm: { title: '', content: '', answer: '', tech_stack: '', difficulty: 1 },
-    difficultyOptions: ['简单', '中等', '困难']
+    difficultyOptions: ['简单', '中等', '困难'],
+    techOptions: ['其他'],
+    techIndex: 0
   },
 
   onLoad(options) {
     const questionId = Number(options.id)
     this.setData({ questionId })
+    this.loadTechStacks()
     this.loadQuestion()
+  },
+
+  loadTechStacks() {
+    api.get('/questions/tech-stacks').then(res => {
+      if (res.stacks && res.stacks.length > 0) {
+        this.setData({ techOptions: res.stacks })
+      }
+    }).catch(() => {})
   },
 
   loadQuestion() {
@@ -94,8 +105,10 @@ Page({
   // ─── 编辑 ───
   openEdit() {
     const q = this.data.question
+    const idx = this.data.techOptions.indexOf(q.tech_stack)
     this.setData({
       editing: true,
+      techIndex: idx >= 0 ? idx : 0,
       editForm: {
         title: q.title,
         content: q.content,
@@ -119,6 +132,12 @@ Page({
   onEditDifficulty(e) {
     const form = { ...this.data.editForm, difficulty: Number(e.detail.value) + 1 }
     this.setData({ editForm: form })
+  },
+
+  onEditTech(e) {
+    const idx = Number(e.detail.value)
+    const form = { ...this.data.editForm, tech_stack: this.data.techOptions[idx] }
+    this.setData({ editForm: form, techIndex: idx })
   },
 
   saveEdit() {

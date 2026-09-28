@@ -5,9 +5,7 @@
     <view class="card question-card">
       <view class="q-head">
         <text class="q-title">{{question.title}}</text>
-        <text class="pub-badge {{question.is_published ? 'on' : 'off'}}">
-          {{question.is_published ? '已发布' : '未发布'}}
-        </text>
+        <text class="pub-badge {{question.is_published ? 'on' : 'off'}}">{{question.is_published ? '已发布' : '未发布'}}</text>
       </view>
       <view class="tag-row">
         <text class="tag {{question.difficultyClass}}">{{question.difficultyLabel}}</text>
@@ -60,7 +58,9 @@
           <text class="m-label">答案</text>
           <textarea class="m-input m-textarea" value="{{editForm.answer}}" data-field="answer" bindinput="onEditInput" />
           <text class="m-label">技术栈</text>
-          <input class="m-input" value="{{editForm.tech_stack}}" data-field="tech_stack" bindinput="onEditInput" />
+          <picker mode="selector" range="{{techOptions}}" value="{{techIndex}}" bindchange="onEditTech">
+            <view class="m-input">{{editForm.tech_stack || '请选择技术栈'}} ▾</view>
+          </picker>
           <text class="m-label">难度</text>
           <picker mode="selector" range="{{difficultyOptions}}" value="{{editForm.difficulty - 1}}" bindchange="onEditDifficulty">
             <view class="m-input">{{difficultyOptions[editForm.difficulty - 1]}} ▾</view>

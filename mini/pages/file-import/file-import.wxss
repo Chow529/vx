@@ -116,6 +116,15 @@
   background: rgba(245, 34, 45, 0.1);
 }
 
+.item-section {
+  font-size: 22rpx;
+  color: #4A90D9;
+  background: rgba(74, 144, 217, 0.08);
+  border-radius: 6rpx;
+  padding: 4rpx 12rpx;
+  display: inline-block;
+  margin-bottom: 10rpx;
+}
 .item-question {
   font-size: 28rpx;
   color: #333;
@@ -170,4 +179,34 @@
   font-size: 32rpx;
   border-radius: 16rpx;
   width: 100%;
+}
+/* 停止解析按钮 */
+.btn-stop {
+  background: rgba(245, 34, 45, 0.1);
+  color: #f5222d;
+}
+.btn-stop::after { border: none; }
+
+/* 流式解析进度提示 */
+.progress-tip {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: #4A90D9;
+  background: rgba(74, 144, 217, 0.08);
+  border-radius: 10rpx;
+  padding: 12rpx 18rpx;
+  margin-bottom: 16rpx;
+}
+.progress-tip.stopped {
+  color: #fa8c16;
+  background: rgba(250, 140, 22, 0.1);
+}
+.dot-anim {
+  margin-right: 10rpx;
+  animation: blink 1s infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
 }

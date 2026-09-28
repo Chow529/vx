@@ -36,7 +36,7 @@
 }
 .tag-row { margin: 12rpx 0; }
 .post-actions { margin-top: 16rpx; padding-top: 16rpx; border-top: 1rpx solid #f0f0f0; gap: 24rpx; }
-.action-btn { font-size: 26rpx; color: #999; }
+.action-btn { font-size: 26rpx; color: #999; line-height: 1; }
 .action-btn.primary { color: #4A90D9; }
 .action-btn.liked { color: #4A90D9; font-weight: 600; }
 .action-btn.collected { color: #52c41a; font-weight: 600; }
@@ -80,9 +80,9 @@
   margin-bottom: 12rpx;
 }
 .comment-actions { margin-top: 8rpx; display: flex; align-items: center; gap: 24rpx; }
-.comment-like { font-size: 24rpx; color: #999; }
+.comment-like { font-size: 24rpx; color: #999; line-height: 1; }
 .comment-like.liked { color: #4A90D9; font-weight: 600; }
-.comment-del { font-size: 24rpx; color: #e64a4a; }
+.comment-del { font-size: 24rpx; color: #e64a4a; line-height: 1; }
 
 .replies {
   background: #f9f9f9;

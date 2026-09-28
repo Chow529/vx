@@ -46,9 +46,7 @@
         <view class="flex-row actions">
           <text class="action-item {{item.is_liked ? 'liked' : ''}}" catchtap="likePost" data-id="{{item.id}}">👍 {{item.like_count}}</text>
           <text class="action-item">💬 {{item.comment_count}}</text>
-          <text class="action-item collect-btn {{item.is_collected ? 'collected' : ''}}" catchtap="collectToMy" data-id="{{item.id}}">
-            ⭐ {{item.is_collected ? '已在题库' : '收藏'}}
-          </text>
+          <text class="action-item collect-btn {{item.is_collected ? 'collected' : ''}}" catchtap="collectToMy" data-id="{{item.id}}">⭐ {{item.is_collected ? '已在题库' : '收藏'}}</text>
         </view>
       </view>
     </view>

@@ -1,5 +1,12 @@
 <!--pages/quiz/quiz.wxml-->
 <view class="container">
+  <!-- 功能开发中占位（developing=false 时恢复正常出题流程） -->
+  <view wx:if="{{developing}}" class="dev-placeholder">
+    <text class="dev-icon">🚧</text>
+    <text class="dev-text">功能正在开发中，敬请期待</text>
+  </view>
+
+  <block wx:else>
   <!-- 配置阶段 -->
   <view wx:if="{{step === 'config'}}" class="config-section">
     <view class="card">
@@ -60,9 +67,7 @@
 
     <view class="nav-buttons">
       <button class="btn-secondary" bindtap="prevQuestion" disabled="{{currentIdx === 0}}">上一题</button>
-      <button class="btn-primary" bindtap="nextQuestion">
-        {{currentIdx === questions.length - 1 ? '提交' : '下一题'}}
-      </button>
+      <button class="btn-primary" bindtap="nextQuestion">{{currentIdx === questions.length - 1 ? '提交' : '下一题'}}</button>
     </view>
   </view>
 
@@ -77,9 +82,7 @@
     <view class="card" wx:for="{{questions}}" wx:key="id">
       <view class="review-header">
         <text class="review-num">#{{index + 1}}</text>
-        <text class="{{userAnswers[index] === item.correct_answer ? 'correct' : 'wrong'}}">
-          {{userAnswers[index] === item.correct_answer ? '✓ 正确' : '✗ 错误'}}
-        </text>
+        <text class="{{userAnswers[index] === item.correct_answer ? 'correct' : 'wrong'}}">{{userAnswers[index] === item.correct_answer ? '✓ 正确' : '✗ 错误'}}</text>
       </view>
       <text class="review-q">{{item.question}}</text>
       <text class="review-answer">你的答案：{{userAnswers[index] || '未作答'}}</text>
@@ -89,4 +92,5 @@
 
     <button class="btn-primary" bindtap="restart">重新出题</button>
   </view>
+  </block>
 </view>

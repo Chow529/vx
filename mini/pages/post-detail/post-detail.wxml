@@ -31,9 +31,7 @@
       <view class="post-actions flex-row">
         <text class="action-btn {{post.is_liked ? 'liked' : ''}}" bindtap="likePost">👍 {{post.like_count}}</text>
         <text class="action-btn">💬 {{post.comment_count}}</text>
-        <text class="action-btn primary {{post.is_collected ? 'collected' : ''}}" bindtap="collectToMy">
-          ⭐ {{post.is_collected ? '已在题库' : '存入题库'}}
-        </text>
+        <text class="action-btn primary {{post.is_collected ? 'collected' : ''}}" bindtap="collectToMy">⭐ {{post.is_collected ? '已在题库' : '存入题库'}}</text>
         <text wx:if="{{post.can_manage}}" class="action-btn primary" bindtap="openEdit">✏️ 编辑</text>
       </view>
     </view>
@@ -53,9 +51,7 @@
         </view>
         <text class="comment-content">{{item.content}}</text>
         <view class="comment-actions">
-          <text class="comment-like {{item.is_liked ? 'liked' : ''}}" bindtap="likeComment" data-id="{{item.id}}">
-            👍 {{item.like_count}}
-          </text>
+          <text class="comment-like {{item.is_liked ? 'liked' : ''}}" bindtap="likeComment" data-id="{{item.id}}">👍 {{item.like_count}}</text>
           <text wx:if="{{item.can_delete}}" class="comment-del" catchtap="deleteComment" data-id="{{item.id}}">删除</text>
         </view>
 

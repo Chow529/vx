@@ -15,13 +15,20 @@
     </button>
   </view>
 
-  <!-- 解析结果预览 -->
-  <view class="card preview-section" wx:if="{{parsed}}">
+  <!-- 解析结果预览（流式逐条呈现） -->
+  <view class="card preview-section" wx:if="{{items.length > 0 || parsing}}">
     <view class="section-title flex-between">
       <text>第二步: 预览并选择 ({{selectedIds.length}}/{{items.length}})</text>
-      <text class="select-all" bindtap="toggleSelectAll">
-        {{selectAll ? '取消全选' : '全选'}}
-      </text>
+      <text wx:if="{{!parsing}}" class="select-all" bindtap="toggleSelectAll">{{selectAll ? '取消全选' : '全选'}}</text>
+    </view>
+
+    <!-- 解析进度 / 停止提示 -->
+    <view wx:if="{{parsing}}" class="progress-tip">
+      <text class="dot-anim">●</text>
+      <text>AI 正在逐题分析… 已呈现 {{items.length}}{{total ? ' / ' + total : ''}} 条</text>
+    </view>
+    <view wx:elif="{{stopped}}" class="progress-tip stopped">
+      已手动停止解析，保留 {{items.length}} 条，可直接勾选导入
     </view>
 
     <scroll-view scroll-y class="item-list">
@@ -38,10 +45,9 @@
             <text class="tag">{{item.tech_stack}}</text>
             <text class="tag {{item.difficultyClass}}">{{item.difficultyLabel}}</text>
           </view>
-          <view class="check-box {{item.selected ? 'checked' : ''}}">
-            {{item.selected ? '✓' : ''}}
-          </view>
+          <view class="check-box {{item.selected ? 'checked' : ''}}">{{item.selected ? '✓' : ''}}</view>
         </view>
+        <text wx:if="{{item.section}}" class="item-section">📁 {{item.section}}</text>
         <text class="item-question">{{item.preview}}</text>
         <text wx:if="{{item.answer}}" class="item-answer">答案: {{item.answer}}</text>
       </view>
@@ -49,7 +55,7 @@
   </view>
 
   <!-- 导入配置 -->
-  <view class="card config-section" wx:if="{{parsed}}">
+  <view class="card config-section" wx:if="{{items.length > 0 && !parsing}}">
     <view class="section-title">第三步: 配置属性</view>
     
     <view class="config-item">
@@ -69,13 +75,17 @@
 
   <!-- 底部按钮区域 -->
   <view class="bottom-bar">
-    <!-- 未解析时显示解析按钮 -->
-    <button wx:if="{{fileName && !parsed}}" class="btn-primary bottom-btn" bindtap="parseFile" disabled="{{parsing}}">
-      {{parsing ? '解析中...' : '开始解析'}}
+    <!-- 解析中：显示停止按钮 -->
+    <button wx:if="{{parsing}}" class="btn-stop bottom-btn" bindtap="stopParse">
+      停止解析
     </button>
-    <!-- 已解析时显示导入按钮 -->
-    <button wx:if="{{parsed}}" class="btn-primary bottom-btn" bindtap="importQuestions" disabled="{{submitting || selectedIds.length === 0}}">
+    <!-- 已有结果：显示导入按钮 -->
+    <button wx:elif="{{items.length > 0}}" class="btn-primary bottom-btn" bindtap="importQuestions" disabled="{{submitting || selectedIds.length === 0}}">
       {{submitting ? '导入中...' : '导入 ' + selectedIds.length + ' 道题目到题库'}}
+    </button>
+    <!-- 仅选了文件：显示解析按钮 -->
+    <button wx:elif="{{fileName}}" class="btn-primary bottom-btn" bindtap="parseFile">
+      开始解析
     </button>
   </view>
 </view>

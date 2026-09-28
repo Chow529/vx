@@ -11,6 +11,8 @@ Page({
     filterTech: '',
     filterDifficulty: '',
     filterMastery: '',
+    filterDateFrom: '',
+    filterDateTo: '',
     showArchived: false,
     techOptions: ['其他'],
     difficultyOptions: [
@@ -101,6 +103,22 @@ Page({
     this.loadQuestions()
   },
 
+  // 导入时间段筛选
+  onDateFromChange(e) {
+    this.setData({ filterDateFrom: e.detail.value, page: 1, questions: [] })
+    this.loadQuestions()
+  },
+
+  onDateToChange(e) {
+    this.setData({ filterDateTo: e.detail.value, page: 1, questions: [] })
+    this.loadQuestions()
+  },
+
+  clearDateFilter() {
+    this.setData({ filterDateFrom: '', filterDateTo: '', page: 1, questions: [] })
+    this.loadQuestions()
+  },
+
   // 加载题目列表
   loadQuestions() {
     this.setData({ loading: true })
@@ -113,6 +131,8 @@ Page({
     if (this.data.filterTech) params.tech_stack = this.data.filterTech
     if (this.data.filterDifficulty) params.difficulty = this.data.filterDifficulty
     if (this.data.filterMastery !== '') params.mastery = this.data.filterMastery
+    if (this.data.filterDateFrom) params.date_from = this.data.filterDateFrom
+    if (this.data.filterDateTo) params.date_to = this.data.filterDateTo
 
     return api.get('/questions/', params).then(res => {
       const items = res.items.map(q => ({
@@ -120,7 +140,8 @@ Page({
         difficultyLabel: ['', '简单', '中等', '困难'][q.difficulty],
         difficultyClass: ['', 'green', 'orange', 'red'][q.difficulty],
         masteryLabel: ['未掌握', '学习中', '已掌握'][q.mastery],
-        masteryClass: ['gray', 'orange', 'green'][q.mastery]
+        masteryClass: ['gray', 'orange', 'green'][q.mastery],
+        createdAt: formatDateTime(q.created_at)
       }))
       this.setData({
         questions: this.data.page === 1 ? items : [...this.data.questions, ...items],
@@ -201,3 +222,12 @@ Page({
     wx.navigateTo({ url: '/pages/file-import/file-import' })
   }
 })
+
+/** 格式化导入时间：2026-09-24 19:32 */
+function formatDateTime(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return ''
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}

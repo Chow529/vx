@@ -10,14 +10,10 @@
   <view class="toolbar flex-between">
     <view class="flex-row">
       <view class="tool-btn" bindtap="toggleFilter">筛选</view>
-      <view class="tool-btn" bindtap="toggleArchived">
-        {{showArchived ? '查看题库' : '查看归档'}} ({{showArchived ? '归档' : '题库'}})
-      </view>
+      <view class="tool-btn" bindtap="toggleArchived">{{showArchived ? '查看题库' : '查看归档'}} ({{showArchived ? '归档' : '题库'}})</view>
       <view class="tool-btn import-btn" bindtap="goFileImport">📁 文件导入</view>
     </view>
-    <view class="tool-btn" bindtap="toggleView">
-      {{viewMode === 'list' ? '卡片' : '列表'}}
-    </view>
+    <view class="tool-btn" bindtap="toggleView">{{viewMode === 'list' ? '卡片' : '列表'}}</view>
   </view>
 
   <!-- 筛选面板 -->
@@ -52,6 +48,19 @@
         >{{item.label}}</text>
       </view>
     </view>
+    <view class="filter-group">
+      <text class="filter-label">导入时间</text>
+      <view class="flex-row date-range">
+        <picker mode="date" value="{{filterDateFrom}}" end="{{filterDateTo}}" bindchange="onDateFromChange">
+          <view class="date-box {{filterDateFrom ? 'filled' : ''}}">{{filterDateFrom || '开始日期'}}</view>
+        </picker>
+        <text class="date-sep">至</text>
+        <picker mode="date" value="{{filterDateTo}}" start="{{filterDateFrom}}" bindchange="onDateToChange">
+          <view class="date-box {{filterDateTo ? 'filled' : ''}}">{{filterDateTo || '结束日期'}}</view>
+        </picker>
+        <text wx:if="{{filterDateFrom || filterDateTo}}" class="date-clear" bindtap="clearDateFilter">清除</text>
+      </view>
+    </view>
   </view>
 
   <!-- 题目列表 -->
@@ -65,9 +74,7 @@
     >
       <view class="flex-between">
         <text class="q-title">{{item.title}}</text>
-        <text class="tag {{item.masteryClass}}" catchtap="cycleMastery" data-id="{{item.id}}" data-mastery="{{item.mastery}}">
-          {{item.masteryLabel}}
-        </text>
+        <text class="tag {{item.masteryClass}}" catchtap="cycleMastery" data-id="{{item.id}}" data-mastery="{{item.mastery}}">{{item.masteryLabel}}</text>
       </view>
 
       <text class="q-content" wx:if="{{viewMode === 'list'}}">{{item.content}}</text>
@@ -79,12 +86,13 @@
       </view>
 
       <view class="flex-between q-footer">
-        <text class="q-source">来源: {{item.source === 'manual' ? '手动录入' : item.source === 'file_import' ? '文件导入' : '社区收藏'}}</text>
+        <view class="q-meta">
+          <text class="q-source">来源: {{item.source === 'manual' ? '手动录入' : item.source === 'file_import' ? '文件导入' : '社区收藏'}}</text>
+          <text class="q-time" wx:if="{{item.createdAt}}">导入于 {{item.createdAt}}</text>
+        </view>
         <view class="flex-row">
           <text wx:if="{{item.is_published}}" class="badge-published">已发布</text>
-          <text class="action-item publish" catchtap="publishToCommunity" data-id="{{item.id}}">
-            {{item.is_published ? '撤销发布' : '发布到社区'}}
-          </text>
+          <text class="action-item publish" catchtap="publishToCommunity" data-id="{{item.id}}">{{item.is_published ? '撤销发布' : '发布到社区'}}</text>
           <text class="action-item" catchtap="deleteQuestion" data-id="{{item.id}}">删除</text>
         </view>
       </view>

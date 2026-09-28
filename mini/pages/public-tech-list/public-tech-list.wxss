@@ -55,6 +55,7 @@
 .q-footer {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 22rpx;
   color: #999;
   padding-top: 12rpx;

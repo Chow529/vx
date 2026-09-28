@@ -48,31 +48,7 @@ const api = {
   get: (url, data) => request(url, { method: 'GET', data }),
   post: (url, data) => request(url, { method: 'POST', data }),
   put: (url, data) => request(url, { method: 'PUT', data }),
-  del: (url, data) => request(url, { method: 'DELETE', data }),
-
-  // 上传文件
-  upload: (url, filePath, name = 'file') => {
-    return new Promise((resolve, reject) => {
-      const app = getAppSafe()
-      wx.uploadFile({
-        url: (app && app.globalData && app.globalData.baseUrl || 'http://127.0.0.1:8000/api') + url,
-        filePath,
-        name,
-        header: {
-          'Authorization': app && app.globalData ? `Bearer ${app.globalData.token}` : ''
-        },
-        success(res) {
-          try {
-            const data = JSON.parse(res.data)
-            resolve(data)
-          } catch (e) {
-            reject(new Error('解析响应失败'))
-          }
-        },
-        fail: reject
-      })
-    })
-  }
+  del: (url, data) => request(url, { method: 'DELETE', data })
 }
 
 module.exports = api

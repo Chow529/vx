@@ -54,11 +54,7 @@ class ParsedQA(BaseModel):
     answer: str = ""
     tech_stack: str = "其他"
     difficulty: int = 1
-
-
-class FileParseResult(BaseModel):
-    filename: str
-    items: List[ParsedQA]
+    section: str = ""  # 所属章节（来自 Markdown 的 # / ## 标题），导入时作为标签保留
 
 
 class CollectFromPost(BaseModel):
