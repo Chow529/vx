@@ -27,11 +27,22 @@ Page({
     ],
     stats: null,
     showFilter: false,
-    viewMode: 'list' // list / card
+    viewMode: 'list', // list / card
+    isAdmin: false    // 管理员才显示「发布公共」按钮
   },
 
   onLoad() {
     this.loadTechStacks()
+    this.loadQuestions()
+  },
+
+  onShow() {
+    // 登录就绪后同步管理员身份（登录是异步的，可能在 onLoad 之后才完成）
+    const app = getApp()
+    app.ensureLogin()
+      .then(() => app.refreshUserInfo())
+      .then(() => this.setData({ isAdmin: app.isAdmin() }))
+      .catch(() => {})
     this.loadQuestions()
   },
 
@@ -47,10 +58,6 @@ Page({
         techOptions: ['Python', 'Java', 'JavaScript', '前端', '后端', 'AI 大模型', '算法', '数据库', '其他']
       })
     })
-  },
-
-  onShow() {
-    this.loadQuestions()
   },
 
   onPullDownRefresh() {
@@ -203,6 +210,34 @@ Page({
           const url = published ? `/questions/${id}/withdraw` : `/questions/${id}/publish`
           api.post(url, {}).then(() => {
             wx.showToast({ title: published ? '已撤销' : '发布成功', icon: 'success' })
+            this.loadQuestions()
+          }).catch(err => {
+            wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' })
+          })
+        }
+      }
+    })
+  },
+
+  // 发布题目到公共题库 / 撤销（仅管理员）
+  publishToPublic(e) {
+    const id = e.currentTarget.dataset.id
+    const question = this.data.questions.find(q => q.id === id)
+    if (!question) return
+
+    const published = question.is_published_public
+    wx.showModal({
+      title: published ? '撤销公共发布' : '发布到公共题库',
+      content: published
+        ? '撤销后公共题库中的对应题目及其评论将被删除，确定吗？'
+        : '公共题库所有人都能查看，发布后仅管理员可编辑删除。确定发布吗？',
+      success: (res) => {
+        if (res.confirm) {
+          const url = published
+            ? `/questions/${id}/withdraw-public`
+            : `/questions/${id}/publish-public`
+          api.post(url, {}).then(() => {
+            wx.showToast({ title: published ? '已撤销' : '已发布到公共题库', icon: 'success' })
             this.loadQuestions()
           }).catch(err => {
             wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' })

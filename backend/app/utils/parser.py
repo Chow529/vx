@@ -82,8 +82,10 @@ def _parse_docx(content: bytes) -> List[ParsedQA]:
 def _parse_markdown(text: str) -> List[ParsedQA]:
     """按标准格式解析 Markdown，保留章节归属
 
-    - 文档中若存在标准问答（### Q1：… + **A：** …），则零散说明文字
-      （前言、引用块、附注）不再生成题目，只记录日志，避免混入垃圾条目
+    - 任意层级的标题（# / ## / ### …），只要以 Q 开头就视为问题，
+      紧随其后的内容作为答案
+    - 文档中若存在标准问答，则零散说明文字（前言、引用块、附注）
+      不再生成题目，只记录日志，避免混入垃圾条目
     - 文档中若完全没有标准问答，则零散文本走启发式兜底解析，保证内容不丢
     """
     items: List[ParsedQA] = []
@@ -139,15 +141,15 @@ def _parse_markdown(text: str) -> List[ParsedQA]:
             level = len(head.group(1))
             title = _clean_inline(head.group(2)).strip()
             qm = _Q_HEAD.match(title)
-            if qm and level >= 2:
-                # 标准问题标题
+            if qm:
+                # 任意层级的标题，只要以 Q 开头就视为问题（不区分 # / ## / ###）
                 flush_question()
                 flush_loose()
                 has_standard = True
                 cur_q = qm.group(1).strip()
                 continue
 
-            # 普通标题：文档标题 / 章节 → 作为元数据；更深层标题 → 保留为内容
+            # 普通标题：浅层 → 作为章节元数据；深层 → 保留为内容
             flush_question()
             flush_loose()
             if level <= 2:

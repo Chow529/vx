@@ -34,6 +34,15 @@ class Settings(BaseSettings):
     ollama_chat_model: str = "qwen3.5:2b"            # 出题 / 分析技术栈难度
     ollama_embed_model: str = "qwen3-embedding:0.6b"  # 向量化（语义搜索），1024 维
 
+    # ─── 管理员 ───
+    # 指定哪些 openid 是管理员（逗号分隔）。这些账号每次登录都会自动获得管理员权限。
+    # 用 `.env` 里的 ADMIN_OPENIDS 配置；留空则只有「首个注册用户」是管理员。
+    admin_openids: str = ""
+
+    @property
+    def admin_openid_set(self) -> set:
+        return {x.strip() for x in self.admin_openids.split(",") if x.strip()}
+
     @model_validator(mode="after")
     def _build_database_url(self):
         """根据 db_type 自动拼装连接串；若已显式设置 database_url 则优先使用"""

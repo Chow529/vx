@@ -102,12 +102,12 @@ def update_public_question(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """编辑公共题目（上传者或管理员）"""
+    """编辑公共题目（仅管理员）"""
     question = db.query(PublicQuestion).filter(PublicQuestion.id == question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="题目不存在")
-    if not can_manage(user, question.user_id):
-        raise HTTPException(status_code=403, detail="只有上传者或管理员可以编辑")
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="公共题库仅管理员可以编辑")
 
     # 内容审查
     update_data = data.model_dump(exclude_unset=True)
@@ -133,13 +133,17 @@ def delete_public_question(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """删除公共题目（上传者或管理员）"""
+    """删除公共题目（仅管理员）"""
     question = db.query(PublicQuestion).filter(PublicQuestion.id == question_id).first()
     if not question:
         raise HTTPException(status_code=404, detail="题目不存在")
-    if not can_manage(user, question.user_id):
-        raise HTTPException(status_code=403, detail="只有上传者或管理员可以删除")
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="公共题库仅管理员可以删除")
 
+    # 级联清理评论，避免留下孤儿数据
+    db.query(PublicComment).filter(PublicComment.question_id == question_id).delete(
+        synchronize_session=False
+    )
     db.delete(question)
     db.commit()
     return {"ok": True}

@@ -39,7 +39,8 @@
   },
   "compileType": "miniprogram",
   "condition": {},
-  "appid": "wxcf63d6644bb1987a",
+  "appid": "wx5bea36dc231ed9ee",
   "simulatorPluginLibVersion": {},
-  "editorSetting": {}
+  "editorSetting": {},
+  "isGameTourist": false
 }

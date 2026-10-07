@@ -10,10 +10,12 @@ logging.getLogger("fastapi").setLevel(logging.WARNING)
 
 # 确保 data 目录存在
 os.makedirs("data", exist_ok=True)
-#os.makedirs("uploads", exist_ok=True)
+# 用户上传的头像存放目录
+os.makedirs("uploads/avatars", exist_ok=True)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.database import engine, Base
 from app.routers import auth, question, post, public_question, quiz
@@ -68,7 +70,10 @@ def _run_migrations():
     inspector = inspect(engine)
     add_columns = {
         "users": [("is_admin", "BOOLEAN DEFAULT 0")],
-        "questions": [("published_post_id", "INTEGER")],
+        "questions": [
+            ("published_post_id", "INTEGER"),
+            ("published_public_id", "INTEGER"),
+        ],
         "posts": [("answer", "TEXT")],
     }
     with engine.begin() as conn:
@@ -106,6 +111,9 @@ app.include_router(post.router, prefix="/api")
 app.include_router(public_question.router, prefix="/api")
 app.include_router(quiz.router, prefix="/api")
 
+# 静态文件：用户上传的头像（前端通过 http://host:8000/static/avatars/xxx.png 访问）
+app.mount("/static", StaticFiles(directory="uploads"), name="static")
+
 
 @app.get("/")
 def root():
@@ -120,4 +128,4 @@ def health():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="192.168.31.138", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000,reload=True)

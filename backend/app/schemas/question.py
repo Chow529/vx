@@ -35,6 +35,8 @@ class QuestionOut(BaseModel):
     is_archived: bool
     published_post_id: Optional[int] = None
     is_published: bool = False
+    published_public_id: Optional[int] = None
+    is_published_public: bool = False  # 是否已发布到公共题库
     tags: List[str] = []
     created_at: datetime
     updated_at: datetime

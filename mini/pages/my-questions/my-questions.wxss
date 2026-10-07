@@ -76,6 +76,16 @@
 .q-time { font-size: 22rpx; color: #bbb; margin-top: 4rpx; }
 .action-item { font-size: 24rpx; color: #f5222d; padding: 4rpx 12rpx; line-height: 1; }
 .action-item.publish { color: #4A90D9; }
+.action-item.public { color: #722ed1; }
+.badge-public {
+  font-size: 20rpx;
+  color: #722ed1;
+  background: rgba(114, 46, 209, 0.1);
+  border-radius: 8rpx;
+  padding: 2rpx 10rpx;
+  margin-right: 8rpx;
+  line-height: 1;
+}
 .badge-published {
   font-size: 20rpx;
   color: #52c41a;

@@ -1,11 +1,25 @@
 <!--pages/profile/profile.wxml - 我的页面-->
 <view class="container">
-  <!-- 用户信息 -->
+  <!-- 用户信息（头像 + 昵称可点击修改，微信「头像昵称填写能力」） -->
   <view class="user-header card">
-    <image class="user-avatar" src="{{userInfo.avatar_url || '/images/default-avatar.png'}}" />
+    <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image class="user-avatar" src="{{userInfo.avatar_url || '/images/default-avatar.png'}}" />
+      <view class="avatar-edit">✎</view>
+    </button>
     <view class="user-info">
-      <text class="user-name">{{userInfo.nickname || '知问用户'}}</text>
-      <text class="user-reputation">声望: {{userInfo.reputation || 0}}</text>
+      <input
+        class="user-name-input"
+        type="nickname"
+        placeholder="点击填写微信昵称"
+        value="{{userInfo.nickname}}"
+        bindchange="onNicknameChange"
+        bindblur="onNicknameBlur"
+        bindconfirm="onNicknameBlur"
+      />
+      <view class="user-meta">
+        <text wx:if="{{userInfo.is_admin}}" class="admin-badge">管理员</text>
+        <text class="user-reputation">声望: {{userInfo.reputation || 0}}</text>
+      </view>
     </view>
   </view>
 

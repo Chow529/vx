@@ -11,7 +11,8 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.user import User
-from ..models.question import Question, Tag
+from ..models.question import Question, Tag, PublicQuestion
+from ..models.public_question import PublicComment
 from ..schemas.question import (
     QuestionCreate, QuestionUpdate, QuestionOut, QuestionListOut,
     CollectFromPost,
@@ -456,6 +457,85 @@ def withdraw_from_community(
     return _question_to_out(question)
 
 
+@router.post("/{question_id}/publish-public", response_model=QuestionOut)
+def publish_to_public(
+    question_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """将个人题目发布到公共题库（仅管理员）
+
+    公共题库所有人可查看，仅管理员可编辑/删除。
+    """
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="仅管理员可以发布到公共题库")
+
+    question = _get_user_question(question_id, user.id, db)
+
+    # 防重复发布
+    if question.published_public_id:
+        existing = db.query(PublicQuestion).filter(
+            PublicQuestion.id == question.published_public_id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="该题目已发布到公共题库")
+        question.published_public_id = None  # 公共题已被删除，清理脏数据
+
+    # 内容审查
+    for field, value in [("标题", question.title), ("内容", question.content), ("答案", question.answer)]:
+        if not value:
+            continue
+        result = check_content(value)
+        if not result["ok"]:
+            logger.warning(f"发布公共题库{field}审查未通过：{result['reason']}")
+            raise HTTPException(status_code=400, detail="含有违规内容")
+
+    public_q = PublicQuestion(
+        user_id=user.id,
+        title=question.title,
+        content=question.content,
+        answer=question.answer or "",
+        tech_stack=question.tech_stack,
+        difficulty=question.difficulty,
+    )
+    db.add(public_q)
+    db.flush()
+
+    question.published_public_id = public_q.id
+    db.commit()
+    db.refresh(question)
+    return _question_to_out(question)
+
+
+@router.post("/{question_id}/withdraw-public", response_model=QuestionOut)
+def withdraw_from_public(
+    question_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """从公共题库撤销（仅管理员）"""
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="仅管理员可以撤销公共题库发布")
+
+    question = _get_user_question(question_id, user.id, db)
+    if not question.published_public_id:
+        raise HTTPException(status_code=400, detail="该题目尚未发布到公共题库")
+
+    public_q = db.query(PublicQuestion).filter(
+        PublicQuestion.id == question.published_public_id
+    ).first()
+    if public_q:
+        db.query(PublicComment).filter(PublicComment.question_id == public_q.id).delete(
+            synchronize_session=False
+        )
+        db.delete(public_q)
+
+    question.published_public_id = None
+    db.commit()
+    db.refresh(question)
+    return _question_to_out(question)
+
+
 @router.get("/stats/overview")
 def get_stats(
     user: User = Depends(get_current_user),
@@ -559,6 +639,8 @@ def _question_to_out(q: Question) -> QuestionOut:
         is_archived=q.is_archived,
         published_post_id=q.published_post_id,
         is_published=bool(q.published_post_id),
+        published_public_id=q.published_public_id,
+        is_published_public=bool(q.published_public_id),
         tags=[t.name for t in q.tags],
         created_at=q.created_at,
         updated_at=q.updated_at,

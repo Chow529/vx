@@ -1,0 +1,7 @@
+version: "2"
+authtoken: 3H7pYksB5AErAqdCr8U9vmuufQf_FbsNuMrRYUW3ay4FZwG5
+tunnels:
+  my-tunnel:          # 隧道名称，可以自定义
+    proto: http
+    addr: 8000        # 替换为你本地服务的实际端口
+    domain: scruffy-whoops-cranial.ngrok-free.dev
